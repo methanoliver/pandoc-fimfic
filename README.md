@@ -14,6 +14,8 @@ and is primarily different by the inclusion of superscript and subscript
 emulation, as well as other customizations and updates to changes in 
 Fimfiction bbcode emulation.
 
+For a reference of bbcode tags supported by FimFiction, see <BBCODE.md>
+
 Usage
 -----
 
