@@ -22,21 +22,16 @@ carry over to the next paragraph. However, size and color tags, for example,
 will not, due to quirks of implementation, and it is generally better to treat
 them all as span level.
 
-*   `[b]bold[/b]`
+*   `[b]bold[/b]`  
+    `[i]italic[/i]`  
+    `[s]strike[/s]`  
+    `[u]underline[/u]`
 
-    **bold**
-
-*   `[i]italic[/i]`
-
-    *italic*
-
-*   `[s]strike[/s]`
-    
-    ~~strike~~
-    
-*   `[u]underline[/u]`
-
-    underline
+    **bold**  
+    *italic*  
+    ~~strike~~  
+    and underline
+    respectively.
     
 *   `[smcaps][/smcaps]`
  
@@ -52,7 +47,7 @@ them all as span level.
     more or less any decimal fraction of em, but sizes of exactly `10em`
     and higher will be rejected.
     
-*   `[color=<color][/color]`
+*   `[color=<color>][/color]`
 
     Text color.
     [Standard HTML color names](http://www.w3schools.com/colors/colors_names.asp)
@@ -71,7 +66,7 @@ them all as span level.
     `[icon]check-circle[/icon]`. Currently uses FontAwesome v4.0.3.
     The icon remains inline with text and obeys size and color tags.
     
-*   `[url=<url>]link text[/url]`\
+*   `[url=<url>]link text[/url]`  
     `[url]<url>[/url]`
     
     Your basic URL tag.
@@ -83,7 +78,7 @@ them all as span level.
     on which protocol the reader is using, i.e.
     `[site_url=/blog/616106/guten-tag]post about tags[/site_url]`.
     
-*   ` [email]user@example.com[/email]`
+*   `[email]user@example.com[/email]`
 
     Will render a `mailto:` email link.
 
