@@ -44,7 +44,7 @@ formats, as I believe these will be the most commonly used.
 *   **Links**: Links to off-site resources will be rendered as usual.
     Links to Fimfiction itself will be rendered using the \[site_url\] tag.
     You can use a link to youtube to produce a centered youtube video tag
-    by giving the link a "youtube_inline" class.
+    by giving the link a "youtube_inline" title.
 
 *   **Code**: Fimfiction has a [code] tag, which works for block level,
     but does not work for inline, and it still executes the bbcode
