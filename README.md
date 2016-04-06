@@ -235,6 +235,14 @@ visually from other quote blocks. They are printed with reduced font size,
 and with this string at the beginning of the block. By default, this 
 is 40 repetitions of a low horizontal wavy line character, "﹏".
 
+#### fimfic-verse-style ####
+
+By default, every line of a verse block is wrapped with `[i][/i]`. This is
+obviously not to everybody's taste, so you can configure the wrapper tag
+just like you can configure a header:
+
+    fimfic-verse-style: ["[size=1.1em][i]", "[/i][/size]"]
+
 #### fimfic-verse-indent ####
 
 The aforementioned verse blocks are indented with a number of spaces, 8 by
