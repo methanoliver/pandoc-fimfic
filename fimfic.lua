@@ -282,7 +282,7 @@ function BlockQuote(s)
 end
 
 function HorizontalRule()
-  return "[hr]"
+  return "{{!hr!}}"
 end
 
 -- Paradoxically, Fimfiction does have code blocks.
@@ -478,7 +478,9 @@ function Doc(text, metadata, variables)
   -- Section breaks
   -- By default is a [hr] tag (horizontal rule)
   if metadata["fimfic-section-break"] then
-      body = body:gsub("%[hr]", metadata["fimfic-section-break"])
+      body = body:gsub("{{!hr!}}", metadata["fimfic-section-break"])
+  else
+      body = body:gsub("{{!hr!}}", "[hr]")
   end
 
   -- Footnote marker. Appears at the start of the footnote block.
