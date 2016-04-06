@@ -5,9 +5,14 @@ Custom Writer for Pandoc that writes FimFiction.net compatible bbcode.
 
 This script requires Pandoc, a program for converting documents between
 several different formats, created by John MacFarlane. Find it at
-<http://johnmacfarlane.net/pandoc/index.html>. Please see the Pandoc User's Guide at the
+<http://pandoc.org/>. Please see the Pandoc User's Guide at the
 same page for details and options for using Pandoc that are not
 covered in this Readme.
+
+This version builds upon the original version first written by HeirOfNorton,
+and is primarily different by the inclusion of superscript and subscript
+emulation, as well as other customizations and updates to changes in 
+Fimfiction bbcode emulation.
 
 Usage
 -----
@@ -33,8 +38,13 @@ formats, as I believe these will be the most commonly used.
     to change the paragraph formatting in the output.
 
 *   **Basic Formating**: Bold, italic, underlines, and strike-throughs
-    work and are output correctly. Links and Images (linked from an
+    work and are output correctly. Images (linked from an
     external website) should work as well.
+
+*   **Links**: Links to off-site resources will be rendered as usual.
+    Links to Fimfiction itself will be rendered using the \[site_url\] tag.
+    You can use a link to youtube to produce a centered youtube video tag
+    by giving the link a "youtube_inline" class.
 
 *   **Basic Styles**: Block quotes are output correctly. FimFiction
     does not have proper Headings, but sensible equivalent formatting
@@ -45,9 +55,10 @@ formats, as I believe these will be the most commonly used.
     should work and be converted if possible. Never apply paragraph
     formatting directly, as this will _not_ be converted.
 
-*   **Footnotes**: Footnotes will be gathered together and inserted at
-    end of the document, separated from the story by a section break
-    (by default a horizontal rule).
+*   **Footnotes**: Footnotes will be gathered together and inserted after
+    the paragraph they appear in, rendered in a marked up quote block.
+    Footnotes use unicode characters to imitate superscript, because
+    Fimfiction does not have the capability for real superscript.
 
 *   **BBCode**: When all else fails, you can use bbcode directly in
     your document. Pandoc will pass any bbcode found through without
@@ -57,9 +68,25 @@ formats, as I believe these will be the most commonly used.
 ### What Kind of Works ###
 
 *   **Lists & Tables**: Bullet, Number, and Definition lists are output as
-    plain-text versions of the lists. FimFiction does not currently
-    support lists in its bbcode, so this is the best I can do.
+    plain-text versions of the lists using FontAwesome markers for list
+    bullets. FimFiction does not support lists in its bbcode, so no better
+    options are possible.
     This is also true of tables.
+    
+*   **Divs**: Fimfiction has no concept of a Pandoc div. However,
+    a provision to mark up verse as a div by giving it a class has been coded:
+
+        <div class="verse">
+
+        | There is a mare in Canterlot
+        | They call the Rising Sun
+        | She loves all ponies in this world
+        | Of them I am but one...
+
+        </div>
+        
+    Unless you change the code, this will render the said div with an extra
+    indent and in italics.
 
 *   **Small Caps, Colored text, Size**: This is due to a limitation of
     Pandoc. Pandoc, generally, does not have markup for (or recognize)
@@ -174,5 +201,3 @@ any string. This string will be used instead, eg.
 Remember that the contents of this string will be interpreted as
 Markdown, so you will need to escape some characters with backslash
 (` \\ `) if you do not want them to be converted.
-
-

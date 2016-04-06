@@ -1,5 +1,6 @@
 -- fimfic.lua
 -- Author: Jason Seeley (HeirOfNorton)
+-- Copious modifications by Oliver@FimFiction.
 --
 -- Description:
 --   This script is meant to be used as a custom writer for Pandoc.
@@ -8,8 +9,6 @@
 -- Usage example: pandoc [pandoc options] -t fimfic.lua input_file -o output_file
 --
 -- See README for more information and options for customization.
-
-
 
 -- Table to store footnotes, so they can be included at the end.
 local notes = {}
@@ -23,6 +22,41 @@ local notes = {}
 -- with the correct markup in the "Doc" function once the
 -- options are available.
 
+-- There is no option for proper superscript in FimFiction.
+-- However, it is possible to imitate at least certain characters.
+
+function string:split_on_space()
+  local result = {}
+  for token in self:gmatch('[^ ]+') do
+    table.insert(result, token)
+  end
+  return result
+end
+
+function string:tr_spaced(from, to)
+  from, to = from:split_on_space(), to:split_on_space()
+  assert(#from == #to, "#from = "..tostring(#from)..", #to = "..tostring(#to))
+  local conversion_table = {}
+  for i = 1, #from do
+    conversion_table[from[i]] = to[i]
+  end
+  local result = self:gsub("%w",conversion_table)
+  return result -- to suppress gsub's second return value
+end
+
+function faux_superscript(input_string)
+    return tostring(input_string):tr_spaced(
+    "0 1 2 3 4 5 6 7 8 9 A B D E G H I J K L M N O P R T U V W a b c d e f g h i j k l m n o p r s t u v w x y z",
+    "⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ᴬ ᴮ ᴰ ᴱ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ ᴼ ᴾ ᴿ ᵀ ᵁ ⱽ ᵂ ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ ⁱ ʲ ᵏ ˡ ᵐ ⁿ ᵒ ᵖ ʳ ˢ ᵗ ᵘ ᵛ ʷ ˣ ʸ ᶻ"
+    )
+end
+
+function faux_subscript(input_string)
+    return tostring(input_string):tr_spaced(
+    "0 1 2 3 4 5 6 7 8 9 a e h i j k l m n o p r s t u v x",
+    "₀ ₁ ₂ ₃ ₄ ₅ ₆ ₇ ₈ ₉ ₐ ₑ ₕ ᵢ ⱼ ₖ ₗ ₘ ₙ ₒ ₚ ᵣ ₛ ₜ ᵤ ᵥ ₓ"
+    )
+end
 
 -- Blocksep is used to separate block elements.
 function Blocksep()
@@ -41,6 +75,10 @@ function Space()
   return " "
 end
 
+function SoftBreak()
+  return "\n"
+end
+
 function LineBreak()
   return "\n"
 end
@@ -53,14 +91,14 @@ function Strong(s)
   return "[b]" .. s .. "[/b]"
 end
 
--- Subscripts and Superscripts not supported by FimFiction
--- just pass text through, for now
+-- Subscripts and Superscripts not supported by FimFiction,
+-- but we can simulate some of it.
 function Subscript(s)
-  return s
+  return faux_subscript(s)
 end
 
 function Superscript(s)
-  return s
+  return faux_superscript(s)
 end
 
 function SmallCaps(s)
@@ -71,7 +109,37 @@ function Strikeout(s)
   return '[s]' .. s .. '[/s]'
 end
 
+-- we need that.
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
+end
+
 function Link(s, src, tit)
+  -- Intra-site urls can use site_url tag instead, which has the benefit of being
+  -- http/https consistent when rendered.
+  local http = "http://www.fimfiction.net"
+  local https = "https://www.fimfiction.net"
+  if string.starts(src, http) then
+      return "[site_url=" .. string.sub(src,string.len(http)+1) .. "]" .. s .. "[/site_url]"
+  end
+  if string.starts(src, https) then
+      return "[site_url=" .. string.sub(src,string.len(https)+1) .. "]" .. s .. "[/site_url]"
+  end
+  -- Urls which have title 'youtube_inline' will be assumed to refer to youtube
+  -- and rendered with [youtube] tag.
+  if tit == "youtube_inline" then
+      local youtube_table = {
+        "https://www.youtube.com/watch%?v=",
+        "http://www.youtube.com/watch%?v=",
+        "http://youtu.be/",
+        "https://youtu.be/",
+      }
+      for i,v in ipairs(youtube_table) do
+        src = string.gsub(src, v, "")
+      end
+      return "[center][youtube=" .. src .. "][/center]"
+  end
+  -- Everything else is a regular old url.
   return "[url=" .. src .. "]" .. s .. "[/url]"
 end
 
@@ -79,8 +147,7 @@ function Image(s, src, tit)
   return "[img]" .. src .. "[/img]"
 end
 
--- Verbatim text or "code" are not supported by FimFiction.
--- Just pass the text through unchanged.
+-- Inline code is not supported by FimFiction in any way.
 function Code(s, attr)
   return s
 end
@@ -98,11 +165,14 @@ end
 -- FimFiction does not have proper support for footnotes,
 -- so we will fake it by inserting the text and markers
 -- ourselves.
+
 function Note(s)
   local num = #notes + 1
   table.insert(notes, s)
-  -- return the footnote reference, linked to the note.
-  return '(' .. num .. ')'
+  -- Write out the footnote reference with a bold faux-superscript unicode character.
+  -- Also leave a marker which we will use to target the paragraph containing the reference.
+  local charnum = tonumber(num)
+  return '[b]' .. faux_superscript(charnum) .. '[/b]{{!fn'.. num ..'!}}'
 end
 
 -- These are Unicode open and close quote characters.
@@ -117,7 +187,7 @@ end
 
 -- FimFiction allows text to have size and color set,
 -- which is not possible in MarkDown. As a workaround,
--- this will detect Spans that have relevent style
+-- this will detect Spans that have relevant style
 -- attributes set
 function Span(s, attr)
   local text = s
@@ -127,7 +197,7 @@ function Span(s, attr)
       if color then
           text = "[color=" .. color .. "]" .. text .. "[/color]"
       end
-      
+
       --size
       local _, _, textsize = attr["style"]:find("size%s*:%s*(.-)%s*;")
       if textsize then
@@ -153,12 +223,49 @@ function Plain(s)
   return s
 end
 
+function table.empty (self)
+    for _, _ in pairs(self) do
+        return false
+    end
+    return true
+end
+
+function insert_footnotes(block)
+    if #notes > 0 then
+      local buff = {}
+      for key, note in ipairs(notes) do
+          local fn_key = '{{!fn'.. key ..'!}}'
+          if block:find(fn_key) then
+              table.insert(buff, "[size=0.75em][b]" .. key .. '.[/b] [/size]' .. note)
+              block = block:gsub(fn_key,'')
+          end
+      end
+      if not table.empty(buff) then
+          -- Apply span-level sizing to every line of the buffer first.
+          local quoteblock = table.concat(buff, '\n')
+          quoteblock = quoteblock:gsub("{{!para!}}","{{!para!}}[size=0.75em]")
+          quoteblock = quoteblock:gsub("{{!paraend!}}","[/size]{{!paraend!}}")
+          -- Clean up stray tags. Yeah, bad code, not used to lua.
+          quoteblock = quoteblock:gsub("%[/size%]{{!para!}}%[size=0%.75em%]","{{!para!}}")
+
+          block = block .. "\n[quote]" ..
+              "[color=green]" ..string.rep('_',40) .. "[/color]\n" ..
+              quoteblock ..
+              "\n[/quote]"
+      end
+    end
+    return block
+end
+
 -- Add a placeholder before paragraphs, to support indenting
 -- or not, and a placeholder at the end, to detect and
 -- remove extra space between paragraphs when the user
 -- chooses single-spacing.
 function Para(s)
-  return "{{!para!}}" .. s .. "{{!paraend!}}"
+  local para = "{{!para!}}" .. s .. "{{!paraend!}}"
+  -- Also use this moment to see if the paragraph contains any footnotes and
+  -- render them as their own quote block and remove the marker.
+  return insert_footnotes(para)
 end
 
 -- FimFiction has no concept of a Header.
@@ -171,35 +278,34 @@ function Header(lev, s, attr)
 end
 
 function BlockQuote(s)
-  return "[quote]" .. s .. "[/quote]"
+  return "[quote]\n" .. s .. "[/quote]"
 end
 
 function HorizontalRule()
   return "[hr]"
 end
 
--- FimFiction does not have code blocks
+-- Paradoxically, Fimfiction does have code blocks.
 function CodeBlock(s, attr)
-  return s
+  return "[code]" .. s .. "[/code]"
 end
 
 -- FimFiction does not have proper list tags
--- For now, fake it with asterisks and numbers
--- (Later, I may allow customization)
+-- So we're faking bullets using FontAwesome icons it has.
 function BulletList(items)
   local buffer = {}
   for _, item in pairs(items) do
-    table.insert(buffer, "* " .. item )
+    table.insert(buffer, "[b][icon]caret-right[/icon][/b] " .. item )
   end
-  return table.concat(buffer, "\n")
+  return insert_footnotes(table.concat(buffer, "\n"))
 end
 
 function OrderedList(items)
   local buffer = {}
   for num, item in pairs(items) do
-    table.insert(buffer, num .. ". " .. item)
+    table.insert(buffer, "[b]" .. num .. ".[/b] " .. item)
   end
-  return table.concat(buffer, "\n")
+  return insert_footnotes(table.concat(buffer, "\n"))
 end
 
 function DefinitionList(items)
@@ -210,7 +316,7 @@ function DefinitionList(items)
                         table.concat(v,", "))
     end
   end
-  return table.concat(buffer, "\n")
+  return insert_footnotes(table.concat(buffer, "\n"))
 end
 
 -- FimFiction does not have tables. For now I am
@@ -240,13 +346,47 @@ function Table(caption, aligns, widths, headers, rows)
   for _, row in pairs(rows) do
     add(table.concat(row, "\t"))
   end
-  return table.concat(buffer,'\n')
+  return insert_footnotes(table.concat(buffer,'\n'))
+end
+
+local function csplit(str,sep)
+        local ret={}
+        local n=1
+        for w in str:gmatch("([^"..sep.."]*)") do
+                        ret[n]=ret[n] or w -- only set once (so the blank after a string is ignored)
+                        if w=="" then n=n+1 end -- step forwards on a blank but not a string
+        end
+        return ret
 end
 
 -- FimFiction has no concept of Divs or the possible
--- attribute they could have.
+-- attribute they could have. But I am going to use them for certain things, notably verse.
 function Div(s, attr)
-  return s
+  if attr['class'] == 'verse' then
+    -- If we've marked it as a verse, do this:
+    --   strip every parastart/paraend tag.
+    --   wrap every line in parastart/paraend tags
+    --   and add an extra 8 spaces to beginning. (I could use color, but fimfiction
+    --   screws up color on non-default color schemes.)
+    --   prepend an empty paragraph before and append one after.
+
+    -- I can style it whichever way I like in html/epub builds, so it's not a problem there.
+    -- This is a dirty hack even for pandoc, but works for the limited use I need it for.
+
+    local m = s:gsub("{{!para!}}", "")
+    m = m:gsub("{{!paraend!}}","")
+    local t = csplit(m,"\n")
+    -- local o = "{{!para!}}{{!paraend!}}\n"
+    local o = "{{!verse_start!}}"
+    for i,v in ipairs(t) do
+        o = o .. "{{!para!}}        [i]" .. v .. "[/i]{{!paraend!}}{{!verse_eol!}}"
+    end
+    -- o = o .. "\n{{!para!}}{{!paraend!}}"
+    o = o .. "{{!verse_end!}}"
+    return insert_footnotes(o)
+  else
+    return insert_footnotes(s)
+  end
 end
 
 -- Finally, putting it all together.
@@ -255,16 +395,31 @@ function Doc(text, metadata, variables)
 
   -- Append footnotes to the end of the body text, before
   -- replacing options and placeholders.
+  -- Commenting this out for the moment.
+  --[[
   if #notes > 0 then
     local buff = {}
     for key, note in ipairs(notes) do
-        table.insert(buff, key .. '. ' .. note)
+        table.insert(buff, "[b]" .. key .. '.[/b] ' .. note)
     end
-    body = body .. "[hr]\n\n" .. table.concat(buff, '\n\n')
+    body = body .. "[hr]\n" .. table.concat(buff, '\n\n') .. "\n"
   end
+  ]]--
 
   -- Replace temporary markup with correct markup now
   -- that the metadata is available.
+
+  -- Handle verse tags:
+  if metadata["fimfic-single-space"] then
+      body = body:gsub("{{!verse_eol!}}", "\n")
+      body = body:gsub("{{!verse_end!}}", "\n{{!para!}}{{!paraend!}}")
+      body = body:gsub("{{!verse_start!}}", "{{!para!}}{{!paraend!}}\n")
+  else
+      body = body:gsub("{{!verse_eol!}}{{!verse_end!}}","")
+      body = body:gsub("{{!verse_eol!}}","\n")
+      body = body:gsub("{{!verse_end!}}", "")
+      body = body:gsub("{{!verse_start!}}", "")
+  end
 
   -- for double or single spacing
   -- (double-spaced by default)
@@ -289,12 +444,12 @@ function Doc(text, metadata, variables)
   if metadata["fimfic-header-1"] then
       body = body:gsub("{{!h1!(.-)!}}", metadata["fimfic-header-1"][1] .. "%1" .. metadata["fimfic-header-1"][2])
   else
-      body = body:gsub("{{!h1!(.-)!}}", "[center][size=xlarge]%1[/size][/center]")
+      body = body:gsub("{{!h1!(.-)!}}", "[center][size=2em][b]%1[/b][/size][/center]")
   end
   if metadata["fimfic-header-2"] then
       body = body:gsub("{{!h2!(.-)!}}", metadata["fimfic-header-2"][1] .. "%1" .. metadata["fimfic-header-2"][2])
   else
-      body = body:gsub("{{!h2!(.-)!}}", "[center][size=large]%1[/size][/center]")
+      body = body:gsub("{{!h2!(.-)!}}", "[center][size=1.5em][b]%1[/b][/size][/center]")
   end
   if metadata["fimfic-header-3"] then
       body = body:gsub("{{!h3!(.-)!}}", metadata["fimfic-header-3"][1] .. "%1" .. metadata["fimfic-header-3"][2])
@@ -304,17 +459,17 @@ function Doc(text, metadata, variables)
   if metadata["fimfic-header-4"] then
       body = body:gsub("{{!h4!(.-)!}}", metadata["fimfic-header-4"][1] .. "%1" .. metadata["fimfic-header-4"][2])
   else
-      body = body:gsub("{{!h4!(.-)!}}", "[b]%1[/b")
+      body = body:gsub("{{!h4!(.-)!}}", "[center][b]%1[/b][/center]")
   end
   if metadata["fimfic-header-5"] then
       body = body:gsub("{{!h5!(.-)!}}", metadata["fimfic-header-5"][1] .. "%1" .. metadata["fimfic-header-5"][2])
   else
-      body = body:gsub("{{!h5!(.-)!}}", "[i]%1[/i]")
+      body = body:gsub("{{!h5!(.-)!}}", "[center][i]%1[/i][/center]")
   end
   if metadata["fimfic-header-6"] then
       body = body:gsub("{{!h6!(.-)!}}", metadata["fimfic-header-6"][1] .. "%1" .. metadata["fimfic-header-6"][2])
   else
-      body = body:gsub("{{!h6!(.-)!}}", "%1")
+      body = body:gsub("{{!h6!(.-)!}}", "[center]%1[/center]")
   end
 
   -- Section breaks
@@ -336,4 +491,3 @@ meta.__index =
     return function() return "" end
   end
 setmetatable(_G, meta)
-
