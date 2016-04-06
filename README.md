@@ -100,7 +100,7 @@ formats, as I believe these will be the most commonly used.
     text enclosed in `<span>` tags with an appripriate `style` attribute
     set will be converted. Eg:
     
-        <span style="text-size: large;">Big Text</span>
+        <span style="text-size: 2em;">Big Text</span>
 
     This uses the standard CSS keywords for these features:
     `font-variant: small-caps;`,
@@ -187,7 +187,7 @@ be output before and after the text of the Heading.
 For example, if we define `fimfic-header-2` like this:
 
     fimfic-header-2:
-      - [size=large][center]
+      - [size=2em][center]
       - [/center][/size]
 
 and in the document we have this Heading (Markdown format):
@@ -207,12 +207,12 @@ The lists can also but written in between brackets, like in JSON:
 
 The default definitions of these Headers is below.
 
-    fimfic-header-1: ["[center][size=xlarge]", "[/size][/center]"]
-    fimfic-header-2: ["[center][size-large]", "[/size][/center]"]
+    fimfic-header-1: ["[center][size=2em]", "[/size][/center]"]
+    fimfic-header-2: ["[center][size=1.5em]", "[/size][/center]"]
     fimfic-headar-3: ["[center][b]", "[/b][/center]"]
-    fimfic-header-4: ["[b]", "[/b]"]
-    fimfic-header-5: ["[i]", "[/i]"]
-    fimfic-header-6: ["", ""]
+    fimfic-header-4: ["[center][b]", "[/b][/center]"]
+    fimfic-header-5: ["[center][i]", "[/i][/center]"]
+    fimfic-header-6: ["[center]", "[/center]"]
 
 #### fimfic-section-break ####
 
