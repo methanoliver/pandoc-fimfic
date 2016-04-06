@@ -286,8 +286,11 @@ function HorizontalRule()
 end
 
 -- Paradoxically, Fimfiction does have code blocks.
+-- But they still parse bbcode tags, which is why we will sanitize them,
+-- by adding a '[b][/b]' after every opening bracket, thus preventing
+-- them from being parsed.
 function CodeBlock(s, attr)
-  return "[code]" .. s .. "[/code]"
+  return "[code]" .. s:gsub('%[','[[b][/b]') .. "[/code]"
 end
 
 -- FimFiction does not have proper list tags
