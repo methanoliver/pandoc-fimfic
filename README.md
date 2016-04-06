@@ -139,6 +139,24 @@ YAML Metadata block within the document itself. For _all_ formats,
 the Metadata can be specified using the Pandoc option
 `-M KEY=VALUE` or `--metadata=KEY:VALUE`.
 
+It is far preferable to use a YAML file, however:
+
+    pandoc -t path/to/fimfic.lua config.yaml mystory.md -o mystory.bbcode
+
+Where config.yaml looks something like this:
+
+```
+---
+fimfic-no-indent: true
+fimfic-single-space: false
+fimfic-section-break: "`[center][size=1.25em][b]✶              ✶              ✶[/b][/size][/center]`"
+...
+```
+
+Notice the use of backticks for fimfic-section-break. Pandoc interprets
+string literals in embedded metadata variables as Markdown strings, and using
+backticks prevents it from compressing the spaces.
+
 All of the options have a `fimfic-` prefix to avoid clashing with any
 other Metadata used in the document.
 
@@ -215,3 +233,14 @@ As footnotes are output in quote blocks, a need exists to distinguish them
 visually from other quote blocks. They are printed with reduced font size,
 and with this string at the beginning of the block. By default, this 
 is 40 repetitions of a low horizontal wavy line character, "﹏".
+
+#### fimfic-verse-indent ####
+
+The aforementioned verse blocks are indented with a number of spaces, 8 by
+default. Fimfiction, contrary to the common practices, does not compress spaces
+in resulting HTML, preferring to render all spaces beyond the first one with
+`&nbsp;` in every run of spaces longer than one, which is a crude but workable
+way to set up paragraphs with specific indents.
+
+This option lets you change the number of spaces the verse block will be
+indented by.

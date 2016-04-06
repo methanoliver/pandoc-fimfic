@@ -382,7 +382,7 @@ function Div(s, attr)
     -- local o = "{{!para!}}{{!paraend!}}\n"
     local o = "{{!verse_start!}}"
     for i,v in ipairs(t) do
-        o = o .. "{{!para!}}        [i]" .. v .. "[/i]{{!paraend!}}{{!verse_eol!}}"
+        o = o .. "{{!para!}}{{!verse_indent!}}[i]" .. v .. "[/i]{{!paraend!}}{{!verse_eol!}}"
     end
     -- o = o .. "\n{{!para!}}{{!paraend!}}"
     o = o .. "{{!verse_end!}}"
@@ -422,6 +422,12 @@ function Doc(text, metadata, variables)
       body = body:gsub("{{!verse_eol!}}","\n")
       body = body:gsub("{{!verse_end!}}", "")
       body = body:gsub("{{!verse_start!}}", "")
+  end
+  -- Verse indent is configurable too:
+  if metadata["fimfic-verse-indent"] then
+      body = body:gsub("{{!verse_indent!}}", string.rep(' ',tonumber(metadata["fimfic-verse-indent"])))
+  else
+      body = body:gsub("{{!verse_indent!}}", string.rep(' ',8))
   end
 
   -- for double or single spacing
