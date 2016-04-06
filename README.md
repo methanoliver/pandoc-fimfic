@@ -48,7 +48,7 @@ formats, as I believe these will be the most commonly used.
 
 *   **Code**: Fimfiction has a [code] tag, which works for block level,
     but does not work for inline, and it still executes the bbcode
-    inside it. But this formatter works around this by inserting \[b\]\[/b\
+    inside it. But this formatter works around this by inserting \[b\]\[/b\]
     after every opening bracket, thus preventing the execution of bbcode
     inside code blocks and producing reasonable-looking fixed width output.
 
@@ -139,7 +139,8 @@ YAML Metadata block within the document itself. For _all_ formats,
 the Metadata can be specified using the Pandoc option
 `-M KEY=VALUE` or `--metadata=KEY:VALUE`.
 
-It is far preferable to use a YAML file, however:
+It generally preferable to use a YAML file, however, especially if you're
+working on a story with multiple chapters:
 
     pandoc -t path/to/fimfic.lua config.yaml mystory.md -o mystory.bbcode
 
