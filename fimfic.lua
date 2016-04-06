@@ -249,7 +249,7 @@ function insert_footnotes(block)
           quoteblock = quoteblock:gsub("%[/size%]{{!para!}}%[size=0%.75em%]","{{!para!}}")
 
           block = block .. "\n[quote]" ..
-              "[color=green]" ..string.rep('_',40) .. "[/color]\n" ..
+              "{{!footnote_marker!}}\n" ..
               quoteblock ..
               "\n[/quote]"
       end
@@ -479,6 +479,13 @@ function Doc(text, metadata, variables)
   -- By default is a [hr] tag (horizontal rule)
   if metadata["fimfic-section-break"] then
       body = body:gsub("%[hr]", metadata["fimfic-section-break"])
+  end
+
+  -- Footnote marker. Appears at the start of the footnote block.
+  if metadata["fimfic-footnote-block"] then
+      body = body:gsub("{{!footnote_marker!}}", metadata["fimfic-footnote-block"])
+  else
+      body = body:gsub("{{!footnote_marker!}}", string.rep('﹏',40))
   end
 
   return body

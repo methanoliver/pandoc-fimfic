@@ -207,3 +207,11 @@ any string. This string will be used instead, eg.
 Remember that the contents of this string will be interpreted as
 Markdown, so you will need to escape some characters with backslash
 (` \\ `) if you do not want them to be converted.
+
+#### fimfic-footnote-block ####
+
+This option allows you to customize the start of the footnote block.
+As footnotes are output in quote blocks, a need exists to distinguish them
+visually from other quote blocks. They are printed with reduced font size,
+and with this string at the beginning of the block. By default, this 
+is 40 repetitions of a low horizontal wavy line character, "﹏".
