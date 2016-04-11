@@ -25,6 +25,10 @@ local notes = {}
 -- There is no option for proper superscript in FimFiction.
 -- However, it is possible to imitate at least certain characters.
 
+local function isempty(s)
+  return s == nil or s == ''
+end
+
 function string:split_on_space()
   local result = {}
   for token in self:gmatch('[^ ]+') do
@@ -114,7 +118,7 @@ function string.starts(String,Start)
    return string.sub(String,1,string.len(Start))==Start
 end
 
-function Link(s, src, tit)
+function Link(s, src, tit, attr)
   -- Intra-site urls can use site_url tag instead, which has the benefit of being
   -- http/https consistent when rendered.
   local http = "http://www.fimfiction.net"
@@ -127,7 +131,7 @@ function Link(s, src, tit)
   end
   -- Urls which have title 'youtube_inline' will be assumed to refer to youtube
   -- and rendered with [youtube] tag.
-  if tit == "youtube_inline" then
+  if attr["class"] == "youtube" then
       local youtube_table = {
         "https://www.youtube.com/watch%?v=",
         "http://www.youtube.com/watch%?v=",
@@ -137,14 +141,42 @@ function Link(s, src, tit)
       for i,v in ipairs(youtube_table) do
         src = string.gsub(src, v, "")
       end
-      return "[center][youtube=" .. src .. "][/center]"
+      if isempty(s) then
+          return "[center][youtube=" .. src .. "][/center]"
+      end
+      return "[center][youtube=" .. src .. "]{{!figcaption!".. s .."!}}[/center]"
   end
   -- Everything else is a regular old url.
   return "[url=" .. src .. "]" .. s .. "[/url]"
 end
 
-function Image(s, src, tit)
+function captioned_img(src, caption)
+    if isempty(caption) then
+        return "[center][img]" .. src .. "[/img][/center]"
+    end
+
+    return "[center][img]" .. src .. "[/img]\n"..
+    "{{!figcaption!" .. caption .. "!}}"
+    .."[/center]"
+
+end
+
+function Image(s, src, tit, attr)
+  if attr["class"] == "centered" then
+      if isempty(tit) then
+        return captioned_img(src, s)
+      end
+
+      return captioned_img(src, tit)
+  end
   return "[img]" .. src .. "[/img]"
+end
+
+function CaptionedImage(src, tit, caption, attr)
+    if isempty(caption) then
+        return captioned_img(src, tit)
+    end
+    return captioned_img(src, caption)
 end
 
 -- Inline code is not supported by FimFiction in any way.
@@ -503,6 +535,14 @@ function Doc(text, metadata, variables)
       body = body:gsub("{{!footnote_marker!}}", metadata["fimfic-footnote-block"])
   else
       body = body:gsub("{{!footnote_marker!}}", string.rep('﹏',40))
+  end
+
+  -- Image caption styling.
+  if metadata["fimfic-image-caption"] then
+      body = body:gsub("{{!figcaption!(.-)!}}",
+      metadata["fimfic-image-caption"][1] .. "%1" .. metadata["fimfic-image-caption"][2])
+  else
+      body = body:gsub("{{!figcaption!(.-)!}}", "[b]%1[/b]")
   end
 
   return body

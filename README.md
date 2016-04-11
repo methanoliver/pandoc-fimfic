@@ -36,18 +36,24 @@ formats, as I believe these will be the most commonly used.
 ### What Works ###
 
 *   **Paragraphs**: These may be entered as normal for each input
-    format (Double spacing for Markdown, \<p> tags for HTML, etc.)
+    format (Double spacing for Markdown, `<p>` tags for HTML, etc.)
     and will be output correctly. See the next section for how
     to change the paragraph formatting in the output.
 
 *   **Basic Formating**: Bold, italic, underlines, and strike-throughs
-    work and are output correctly. Images (linked from an
-    external website) should work as well.
+    work and are output correctly.
+    
+*   **Images**: Cannot be embedded into the text, because FimFiction does not
+    support data URLs, but can be linked to. In Markdown, an image used as a block
+    element will be rendered centered and with a caption below, and so will be
+    an image given an explicit `{.centered}` class.
 
 *   **Links**: Links to off-site resources will be rendered as usual.
     Links to Fimfiction itself will be rendered using the \[site_url\] tag.
     You can use a link to youtube to produce a centered youtube video tag
-    by giving the link a "youtube_inline" title.
+    by giving the link a "youtube" class. In Markdown, this is done like this:
+    
+        [This will be used as caption](https://www.youtube.com/watch?v=C9H_FDZGkUw){.youtube}
 
 *   **Code**: Fimfiction has a [code] tag, which works for block level,
     but does not work for inline, and it still executes the bbcode
@@ -76,7 +82,7 @@ formats, as I believe these will be the most commonly used.
 
 ### What Kind of Works ###
 
-*   **Lists & Tables**: Bullet, Number, and Definition lists are output as
+*   **Lists \& Tables**: Bullet, Number, and Definition lists are output as
     plain-text versions of the lists using FontAwesome markers for list
     bullets. FimFiction does not support lists in its bbcode, so no better
     options are possible.
@@ -256,3 +262,10 @@ way to set up paragraphs with specific indents.
 
 This option lets you change the number of spaces the verse block will be
 indented by.
+
+#### fimfic-image-caption ####
+
+When images are rendered captioned, you can configure the style the caption is
+rendered with, which is `[b][/b]` by default:
+
+    fimfic-image-caption: ["[b]", "[/b]"]
