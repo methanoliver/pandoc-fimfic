@@ -397,6 +397,7 @@ end
 -- FimFiction has no concept of Divs or the possible
 -- attribute they could have. But I am going to use them for certain things, notably verse.
 function Div(s, attr)
+    text = s
     if attr['class'] == 'verse' then
         -- If we've marked it as a verse, do this:
         -- strip every parastart/paraend tag.
@@ -408,7 +409,7 @@ function Div(s, attr)
         -- I can style it whichever way I like in html/epub builds, so it's not a problem there.
         -- This is a dirty hack even for pandoc, but works for the limited use I need it for.
 
-        local m = s:gsub("{{!para!}}", "")
+        local m = text:gsub("{{!para!}}", "")
         m = m:gsub("{{!paraend!}}","")
         local t = csplit(m,"\n")
         -- local o = "{{!para!}}{{!paraend!}}\n"
@@ -419,10 +420,16 @@ function Div(s, attr)
         end
         -- o = o .. "\n{{!para!}}{{!paraend!}}"
         o = o .. "{{!verse_end!}}"
-        return insert_footnotes(o)
-    else
-        return insert_footnotes(s)
+        text = o
     end
+    if attr['class'] == "center" then
+        text = "[center]" .. text .. "[center]"
+    end
+    if attr['class'] == "right" then
+        text = "[right]" .. text .. "[right]"
+    end
+
+    return insert_footnotes(text)
 end
 
 -- Finally, putting it all together.

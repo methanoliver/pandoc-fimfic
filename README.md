@@ -120,6 +120,18 @@ formats, as I believe these will be the most commonly used.
     arbitrary HTML to be entered). Changing the color or size of text
     in MS Word does _not_ work. Again, though, simply entering the
     appropriate BBCode directly does work in all major formats.
+    
+*   **Centered, Right text**: Should you feel the need to
+    explicitly center or right-align a paragraph, you do this by wrapping it
+    in a `<div>` with `right` or `center` class:
+
+        <div class="right">
+
+        This paragraph will be right-aligned in Fimfiction,
+        and you can easily style it so that it's right-aligned in html or
+        epub, too.
+
+        </div>
 
 ### What Does Not Work ###
 
@@ -128,10 +140,8 @@ formats, as I believe these will be the most commonly used.
     formatting (eg. changed fonts, size and color, drop shadow) does
     not work either.
 
-*   **Centered Text**: Centering a paragraph does not transfer, as Pandoc
-    itself does not recognize centered text. The only way to get centered
-    text is to use a customized Heading (see next section) or use the
-    `[center]` BBCode tags directly.
+*   **Centered Text**: Centering a paragraph will not transfer, unless
+    you do it as described above, i.e. by using a classed `<div>`.
 
 Customization
 -------------
