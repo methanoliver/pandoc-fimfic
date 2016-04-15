@@ -173,6 +173,9 @@ function Image(s, src, tit, attr)
 end
 
 function CaptionedImage(src, tit, caption, attr)
+    if tit == "fig:" then
+        tit = ""
+    end
     if isempty(caption) then
         return captioned_img(src, tit)
     end
