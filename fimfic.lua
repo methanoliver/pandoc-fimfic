@@ -333,7 +333,7 @@ end
 function BulletList(items)
     local buffer = {}
     for _, item in pairs(items) do
-        table.insert(buffer, "[b][icon]caret-right[/icon][/b] " .. item )
+        table.insert(buffer, "{{!list_bullet!}} " .. item )
     end
     return insert_footnotes(table.concat(buffer, "\n"))
 end
@@ -553,6 +553,13 @@ function Doc(text, metadata, variables)
             metadata["fimfic-image-caption"][1] .. "%1" .. metadata["fimfic-image-caption"][2])
     else
         body = body:gsub("{{!figcaption!(.-)!}}", "[b]%1[/b]")
+    end
+
+    -- Bullet list styling.
+    if metadata["fimfic-list-bullet"] then
+        body = body:gsub("{{!list_bullet!}}", metadata["fimfic-list-bullet"])
+    else
+        body = body:gsub("{{!list_bullet!}}", "[b][icon]caret-right[/icon][/b]")
     end
 
     return body

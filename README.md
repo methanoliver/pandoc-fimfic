@@ -279,3 +279,10 @@ When images are rendered captioned, you can configure the style the caption is
 rendered with, which is `[b][/b]` by default:
 
     fimfic-image-caption: ["[b]", "[/b]"]
+
+#### fimfic-list-bullet ####
+
+When rendering bulleted list, this is the sequence of characters that will be
+used for the list bullet.
+
+    fimfic-list-bullet: "`[b][icon]caret-right[/icon][/b]`"
