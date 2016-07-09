@@ -286,3 +286,22 @@ When rendering bulleted list, this is the sequence of characters that will be
 used for the list bullet.
 
     fimfic-list-bullet: "`[b][icon]caret-right[/icon][/b]`"
+
+#### fimfic-endnotes ####
+
+By default, for readability, footnotes are rendered immediately after the block
+they are used in, since there is no way to make in-document links on Fimfiction,
+and the readers don't like to scroll all the way to the end and then back.
+Sometimes, however, the effect you're aiming for requires footnotes to be shown
+at the end of the chapter anyway, and you _want_ to surprise the reader. In
+this case, you can set this flag:
+
+    fimfic-endnotes: true
+    
+#### fimfic-footnote-scale ####
+
+Footnotes are traditionally printed in a smaller font size in most media. By
+default, this is equal to 0.75em. Should you wish to use a smaller or larger
+font size, set this value:
+
+    fimfic-footnote-scale: 1.1em

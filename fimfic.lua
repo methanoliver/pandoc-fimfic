@@ -29,6 +29,16 @@ local function isempty(s)
     return s == nil or s == ''
 end
 
+local function csplit(str,sep)
+    local ret={}
+    local n=1
+    for w in str:gmatch("([^"..sep.."]*)") do
+        ret[n]=ret[n] or w -- only set once (so the blank after a string is ignored)
+        if w=="" then n=n+1 end -- step forwards on a blank but not a string
+    end
+    return ret
+end
+
 function string:split_on_space()
     local result = {}
     for token in self:gmatch('[^ ]+') do
@@ -271,24 +281,62 @@ function insert_footnotes(block)
         for key, note in ipairs(notes) do
             local fn_key = '{{!fn'.. key ..'!}}'
             if block:find(fn_key) then
-                table.insert(buff, "[size=0.75em][b]" .. key .. '.[/b] [/size]' .. note)
+                table.insert(buff, key)
                 block = block:gsub(fn_key,'')
             end
         end
-        if not table.empty(buff) then
-            -- Apply span-level sizing to every line of the buffer first.
-            local quoteblock = table.concat(buff, '\n')
-            quoteblock = quoteblock:gsub("{{!para!}}","{{!para!}}[size=0.75em]")
-            quoteblock = quoteblock:gsub("{{!paraend!}}","[/size]{{!paraend!}}")
-            -- Clean up stray tags. Yeah, bad code, not used to lua.
-            quoteblock = quoteblock:gsub("%[/size%]{{!para!}}%[size=0%.75em%]","{{!para!}}")
-
-            block = block .. "\n[quote]" ..
-            "{{!footnote_marker!}}\n" ..
-            quoteblock ..
-            "\n[/quote]"
+        if table.getn(buff) > 0 then
+            block = block .. "{{!footnote_bodies!".. table.concat(buff,"!") .. "!}}"
         end
     end
+    return block
+end
+
+function style_footnote_block(footnote_table)
+    local quoteblock = table.concat(footnote_table, '\n')
+    quoteblock = quoteblock:gsub("{{!para!}}","{{!para!}}[size={!fnscale!}]")
+    quoteblock = quoteblock:gsub("{{!paraend!}}","[/size]{{!paraend!}}")
+    -- Clean up stray tags. Yeah, bad code, not used to lua.
+    quoteblock = quoteblock:gsub("%[/size%]{{!para!}}%[size=0%.75em%]","{{!para!}}")
+
+    return "\n[quote]" .. "{{!footnote_marker!}}\n" .. quoteblock .. "\n[/quote]"
+end
+
+function style_footnote_start(key, note)
+    return "[size={!fnscale!}][b]" .. key .. '.[/b] [/size]' .. note
+end
+
+function insert_footnote_bodies(block)
+
+    -- If there is an {{!endnotes!}} marker in the text, put all the footnotes there.
+    -- Otherwise, place them by number where {{!footnote_bodies!...}} markers are.
+
+    if block:find('{{!endnotes!}}') then
+        if #notes > 0 then
+            local buff = {}
+            for key, note in ipairs(notes) do
+                table.insert(buff, style_footnote_start(key, note))
+            end
+            return block:gsub("{{!endnotes!}}", style_footnote_block(buff))
+        else
+            return block:gsub("{{!endnotes!}}", "")
+        end
+    else
+        repeat
+            local marker = block:match("{{!footnote_bodies!.-!}}")
+            if marker then
+
+                local numbers = csplit(marker:gsub("{{!footnote_bodies!(.-)!}}","%1"),"!")
+                local buff = {}
+                for index, number in ipairs(numbers) do
+                    table.insert(buff, style_footnote_start(number, notes[tonumber(number)]))
+                end
+
+                block = block:gsub(marker, style_footnote_block(buff))
+            end
+        until not marker
+    end
+    -- Apply span-level sizing to every line of the buffer first.
     return block
 end
 
@@ -387,16 +435,6 @@ function Table(caption, aligns, widths, headers, rows)
     return insert_footnotes(table.concat(buffer,'\n'))
 end
 
-local function csplit(str,sep)
-    local ret={}
-    local n=1
-    for w in str:gmatch("([^"..sep.."]*)") do
-        ret[n]=ret[n] or w -- only set once (so the blank after a string is ignored)
-        if w=="" then n=n+1 end -- step forwards on a blank but not a string
-    end
-    return ret
-end
-
 -- FimFiction has no concept of Divs or the possible
 -- attribute they could have. But I am going to use them for certain things, notably verse.
 function Div(s, attr)
@@ -481,6 +519,14 @@ function Doc(text, metadata, variables)
         body = body:gsub("{{!verse_close!}}", "[/i]")
     end
 
+    -- Install footnote bodies where they belong.
+    if metadata["fimfic-endnotes"] then
+        body = insert_footnote_bodies(body .. "\n{{!endnotes!}}")
+        body = body:gsub("{{!footnote_bodies!(.-)!}}","")
+    else
+        body = insert_footnote_bodies(body)
+    end
+
     -- for double or single spacing
     -- (double-spaced by default)
     if metadata["fimfic-single-space"] then
@@ -545,6 +591,13 @@ function Doc(text, metadata, variables)
         body = body:gsub("{{!footnote_marker!}}", metadata["fimfic-footnote-block"])
     else
         body = body:gsub("{{!footnote_marker!}}", string.rep('﹏',40))
+    end
+
+    -- Footnote scale. Defaults to 0.75em
+    if metadata["fimfic-footnote-scale"] then
+        body = body:gsub("{!fnscale!}", metadata["fimfic-footnote-scale"])
+    else
+        body = body:gsub("{!fnscale!}", "0.75em")
     end
 
     -- Image caption styling.
