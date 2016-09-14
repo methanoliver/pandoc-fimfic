@@ -80,7 +80,8 @@ them all as span level.
     
 *   `[email]user@example.com[/email]`
 
-    Will render a `mailto:` email link.
+    Will render a `mailto:` email link. This does not work in private 
+    messages for some stupid reason.
 
 ## Block level tags
 
