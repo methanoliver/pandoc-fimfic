@@ -368,6 +368,21 @@ function HorizontalRule()
     return "{{!hr!}}"
 end
 
+-- A LineBlock is a block which is pre-wrapped.
+-- In Fimfiction, everything is pre-wrapped.
+function LineBlock(ls)
+  return table.concat(ls, '\n')
+end
+
+-- Not sure when those two come up just yet.
+function RawInline(format, str)
+  return str
+end
+
+function RawBlock(format, str)
+  return str
+end
+
 -- Paradoxically, Fimfiction does have code blocks.
 -- But they still parse bbcode tags, which is why we will sanitize them,
 -- by adding a '[b][/b]' after every opening bracket, thus preventing
