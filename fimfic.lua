@@ -294,6 +294,9 @@ end
 
 function style_footnote_block(footnote_table)
     local quoteblock = table.concat(footnote_table, '\n')
+    -- Prevent failures on urlencoded urls in footnotes.
+    quoteblock = quoteblock:gsub("%%", "%%%%")
+
     quoteblock = quoteblock:gsub("{{!para!}}","{{!para!}}[size={!fnscale!}]")
     quoteblock = quoteblock:gsub("{{!paraend!}}","[/size]{{!paraend!}}")
     -- Clean up stray tags. Yeah, bad code, not used to lua.
