@@ -305,3 +305,15 @@ default, this is equal to 0.75em. Should you wish to use a smaller or larger
 font size, set this value:
 
     fimfic-footnote-scale: 1.1em
+
+#### fimfic-footnote-brackets ####
+
+While it is not possible to make in-page anchor links on Fimfiction, most
+browsers treat superscript characters the same as their regular counterparts
+for the purposes of in-page search. It may be more convenient to put footnote
+markers in brackets, because then, searching for "(1)" will allow the reader
+to quickly jump between the footnote text and the footnote marker. If you want
+this to happen, set this value to true:
+
+    fimfic-footnote-brackets: true
+

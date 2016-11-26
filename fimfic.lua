@@ -60,8 +60,8 @@ end
 
 function faux_superscript(input_string)
     return tostring(input_string):tr_spaced(
-        "0 1 2 3 4 5 6 7 8 9 A B D E G H I J K L M N O P R T U V W a b c d e f g h i j k l m n o p r s t u v w x y z",
-        "⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ᴬ ᴮ ᴰ ᴱ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ ᴼ ᴾ ᴿ ᵀ ᵁ ⱽ ᵂ ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ ⁱ ʲ ᵏ ˡ ᵐ ⁿ ᵒ ᵖ ʳ ˢ ᵗ ᵘ ᵛ ʷ ˣ ʸ ᶻ"
+        "0 1 2 3 4 5 6 7 8 9 A B D E G H I J K L M N O P R T U V W a b c d e f g h i j k l m n o p r s t u v w x y z ( )",
+        "⁰ ¹ ² ³ ⁴ ⁵ ⁶ ⁷ ⁸ ⁹ ᴬ ᴮ ᴰ ᴱ ᴳ ᴴ ᴵ ᴶ ᴷ ᴸ ᴹ ᴺ ᴼ ᴾ ᴿ ᵀ ᵁ ⱽ ᵂ ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ ⁱ ʲ ᵏ ˡ ᵐ ⁿ ᵒ ᵖ ʳ ˢ ᵗ ᵘ ᵛ ʷ ˣ ʸ ᶻ ⁽ ⁾"
     )
 end
 
@@ -216,8 +216,9 @@ function Note(s)
     table.insert(notes, s)
     -- Write out the footnote reference with a bold faux-superscript unicode character.
     -- Also leave a marker which we will use to target the paragraph containing the reference.
+    -- As well as the markers for styling faux superscript.
     local charnum = tonumber(num)
-    return '[b]' .. faux_superscript(charnum) .. '[/b]{{!fn'.. num ..'!}}'
+    return '[b]{{!sfn_sb_pre!}}' .. faux_superscript(charnum) .. '{{!sfn_sb_post!}}[/b]{{!fn'.. num ..'!}}'
 end
 
 -- These are Unicode open and close quote characters.
@@ -306,7 +307,7 @@ function style_footnote_block(footnote_table)
 end
 
 function style_footnote_start(key, note)
-    return "[size={!fnscale!}][b]" .. key .. '.[/b] [/size]' .. note
+    return "[size={!fnscale!}][b]{{!sfn_sbb_pre!}}" .. key .. '{{!sfn_sbb_post!}}.[/b] [/size]' .. note
 end
 
 function insert_footnote_bodies(block)
@@ -616,6 +617,19 @@ function Doc(text, metadata, variables)
         body = body:gsub("{!fnscale!}", metadata["fimfic-footnote-scale"])
     else
         body = body:gsub("{!fnscale!}", "0.75em")
+    end
+
+    -- Footnote brackets.
+    if metadata["fimfic-footnote-brackets"] then
+        body = body:gsub("{{!sfn_sb_pre!}}", "⁽")
+        body = body:gsub("{{!sfn_sb_post!}}", "⁾")
+        body = body:gsub("{{!sfn_sbb_pre!}}", "(")
+        body = body:gsub("{{!sfn_sbb_post!}}", ")")
+    else
+        body = body:gsub("{{!sfn_sb_pre!}}", "")
+        body = body:gsub("{{!sfn_sb_post!}}", "")
+        body = body:gsub("{{!sfn_sbb_pre!}}", "")
+        body = body:gsub("{{!sfn_sbb_post!}}", "")
     end
 
     -- Image caption styling.
