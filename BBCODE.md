@@ -74,7 +74,7 @@ them all as span level.
 *   `[site_url=<url>]link text[/site_url]`
     
     Your less basic URL tag. Will accept URLs with no domain and substitute
-    either `http://www.fimficton.net` or `https://www.fimficton.net` depending
+    either `http://www.fimfiction.net` or `https://www.fimfiction.net` depending
     on which protocol the reader is using, i.e.
     `[site_url=/blog/616106/guten-tag]post about tags[/site_url]`.
     
