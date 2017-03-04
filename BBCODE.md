@@ -61,11 +61,12 @@ them all as span level.
 
 *   `[icon]<icon name>[/icon]`
 
-    Will insert a [FontAwesome](https://fortawesome.github.io/Font-Awesome/)
-    icon by name, i.e. without the `fa-` prefix, for example,
-    `[icon]check-circle[/icon]`. Currently uses FontAwesome v4.0.3.
-    The icon remains inline with text and obeys size and color tags.
-    
+    Will insert a [FontAwesome](http://fontawesome.io/icons/) icon by name,
+    i.e. without the `fa-` prefix, for example,
+    `[icon]check-circle[/icon]`. Currently uses FontAwesome v4.0.3, so be sure
+    to check which version an icon was introduced in before using it. The
+    icon remains inline with text and obeys size and color tags.
+
 *   `[url=<url>]link text[/url]`  
     `[url]<url>[/url]`
     
@@ -80,7 +81,7 @@ them all as span level.
     
 *   `[email]user@example.com[/email]`
 
-    Will render a `mailto:` email link. This does not work in private 
+    Will render a `mailto:` email link. This tag does *not* work in private
     messages for some stupid reason.
 
 ## Block level tags
@@ -109,15 +110,17 @@ inside.
     Will produce a right-aligned block. There are no tags to left align
     text because it is always left-aligned by default.
     
-*   `[left_insert][/left_insert]`  
-    `[right_insert][/right_insert]` 
+*   `[left_insert][/left_insert]`
+    `[right_insert][/right_insert]`
 
     Will produce specially styled blockquote blocks, which will float to the
     left or to the right of the page, taking up half the width. The background
     color on these is hardcoded, and if the user is reading with a negative
     palette, the results can be rather crude, so they are best confined to
-    blog posts, but they will work elsewhere.
-    
+    blog posts, but they will work elsewhere. Notice that inserts can be
+    nested. A right insert and a left insert used in parallel will not fit
+    together and one will push the other out.
+
 *   `[page_break]`
 
     Will produce a 'Read More' button on a blog post when the post is viewed
@@ -125,8 +128,9 @@ inside.
     
 *   `[youtube=<youtube ID>]`
 
-    Will embed a youtube video. Takes a youtube ID of a video, and not an URL.
-    Will render as a div with an iframe and will obey `[center]` and
+    Will embed a youtube video. Takes a youtube ID of a video. Will accept
+    some forms of youtube URL but not others, so your best bet is using the
+    ID.  Will render as a div with an iframe and will obey `[center]` and
     other positioning tags.
 
 *   `[img]<url>[/img]`
