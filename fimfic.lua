@@ -139,7 +139,7 @@ function Link(s, src, tit, attr)
     if string.starts(src, https) then
         return "[site_url=" .. string.sub(src,string.len(https)+1) .. "]" .. s .. "[/site_url]"
     end
-    -- Urls which have title 'youtube_inline' will be assumed to refer to youtube
+    -- Urls which have class 'youtube' will be assumed to refer to youtube
     -- and rendered with [youtube] tag.
     if attr["class"] == "youtube" then
         local youtube_table = {
@@ -287,7 +287,9 @@ function insert_footnotes(block)
             end
         end
         if table.getn(buff) > 0 then
-            block = block .. "{{!footnote_bodies!".. table.concat(buff,"!") .. "!}}"
+            block = "{{!footnote_bodies_pre!".. table.concat(buff,"!") ..
+                "!}}" .. block .. "{{!footnote_bodies_post!"..
+                table.concat(buff,"!") .. "!}}"
         end
     end
     return block
@@ -303,7 +305,7 @@ function style_footnote_block(footnote_table)
     -- Clean up stray tags. Yeah, bad code, not used to lua.
     quoteblock = quoteblock:gsub("%[/size%]{{!para!}}%[size=0%.75em%]","{{!para!}}")
 
-    return "\n[quote]" .. "{{!footnote_marker!}}\n" .. quoteblock .. "\n[/quote]"
+    return "{{!footnote_block_begins!}}" .. "{{!footnote_marker!}}" .. quoteblock .. "{{!footnote_block_ends!}}"
 end
 
 function style_footnote_start(key, note)
@@ -496,19 +498,6 @@ end
 function Doc(text, metadata, variables)
     local body = text
 
-    -- Append footnotes to the end of the body text, before
-    -- replacing options and placeholders.
-    -- Commenting this out for the moment.
-    --[[
-    if #notes > 0 then
-        local buff = {}
-        for key, note in ipairs(notes) do
-            table.insert(buff, "[b]" .. key .. '.[/b] ' .. note)
-        end
-        body = body .. "[hr]\n" .. table.concat(buff, '\n\n') .. "\n"
-    end
-    ]]--
-
     -- Replace temporary markup with correct markup now
     -- that the metadata is available.
 
@@ -536,6 +525,17 @@ function Doc(text, metadata, variables)
     else
         body = body:gsub("{{!verse_open!}}", "[i]")
         body = body:gsub("{{!verse_close!}}", "[/i]")
+    end
+
+    -- If footnotes are to be installed at the beginning of the paragraph,
+    -- clean out the paragraph-ending tags.
+    -- Otherwise, clean out the paragraph_beginning tags.
+    if metadata["fimfic-footnote-pre"] then
+        body = body:gsub("{{!footnote_bodies_post!(.-)!}}","")
+        body = body:gsub("{{!footnote_bodies_pre!","{{!footnote_bodies!")
+    else
+        body = body:gsub("{{!footnote_bodies_pre!(.-)!}}","")
+        body = body:gsub("{{!footnote_bodies_post!","{{!footnote_bodies!")
     end
 
     -- Install footnote bodies where they belong.
@@ -609,9 +609,18 @@ function Doc(text, metadata, variables)
     if metadata["fimfic-footnote-block"] then
         body = body:gsub("{{!footnote_marker!}}", metadata["fimfic-footnote-block"])
     else
-        body = body:gsub("{{!footnote_marker!}}", string.rep('﹏',40))
+        body = body:gsub("{{!footnote_marker!}}", string.rep('﹏',40) .. "\n")
     end
 
+    -- Footnote block tag. Wraps a footnote block.
+    if metadata["fimfic-footnote-block-tag"] then
+        body = body:gsub("{{!footnote_block_begins!}}", metadata["fimfic-footnote-block-tag"][1])
+        body = body:gsub("{{!footnote_block_ends!}}", metadata["fimfic-footnote-block-tag"][2])
+    else
+        body = body:gsub("{{!footnote_block_begins!}}", "\n[quote]")
+        body = body:gsub("{{!footnote_block_ends!}}", "[/quote]\n")
+    end
+    
     -- Footnote scale. Defaults to 0.75em
     if metadata["fimfic-footnote-scale"] then
         body = body:gsub("{!fnscale!}", metadata["fimfic-footnote-scale"])

@@ -248,11 +248,12 @@ Markdown, so you will need to escape some characters with backslash
 
 #### fimfic-footnote-block ####
 
-This option allows you to customize the start of the footnote block.
-As footnotes are output in quote blocks, a need exists to distinguish them
-visually from other quote blocks. They are printed with reduced font size,
-and with this string at the beginning of the block. By default, this 
-is 40 repetitions of a low horizontal wavy line character, "﹏".
+This option allows you to customize the start of the footnote block.  As
+footnotes are output in quote blocks, a need exists to distinguish them
+visually from other quote blocks. They are printed with reduced font size, and
+with this string at the beginning of the block. By default, this is 40
+repetitions of a low horizontal wavy line character, "﹏", with a trailing
+newline. You can set it to an empty string if you like.
 
 #### fimfic-verse-style ####
 
@@ -287,17 +288,6 @@ used for the list bullet.
 
     fimfic-list-bullet: "`[b][icon]caret-right[/icon][/b]`"
 
-#### fimfic-endnotes ####
-
-By default, for readability, footnotes are rendered immediately after the block
-they are used in, since there is no way to make in-document links on Fimfiction,
-and the readers don't like to scroll all the way to the end and then back.
-Sometimes, however, the effect you're aiming for requires footnotes to be shown
-at the end of the chapter anyway, and you _want_ to surprise the reader. In
-this case, you can set this flag:
-
-    fimfic-endnotes: true
-    
 #### fimfic-footnote-scale ####
 
 Footnotes are traditionally printed in a smaller font size in most media. By
@@ -317,3 +307,43 @@ this to happen, set this value to true:
 
     fimfic-footnote-brackets: true
 
+#### fimfic-footnote-block-tag ####
+
+Normally, footnotes are placed in `[quote]` blocks. However, there is a case
+for using sidenotes -- using a `[right_insert]` block, for example. This
+variable lets you configure that.
+
+    fimfic-footnote-block-tag: ["[right_insert]","[/right_insert]"]
+
+You need both the opening and the closing tag.
+
+#### fimfic-endnotes ####
+
+By default, for readability, footnotes are rendered immediately after the block
+they are used in, since there is no way to make in-document links on Fimfiction,
+and the readers don't like to scroll all the way to the end and then back.
+Sometimes, however, the effect you're aiming for requires footnotes to be shown
+at the end of the chapter anyway, and you _want_ to surprise the reader. In
+this case, you can set this flag:
+
+    fimfic-endnotes: true
+
+#### fimfic-footnote-pre ####
+
+But if you changed the footnote block tag to `[right_insert]`, you want the footnote block to appear *before* the start of the paragraph, rather than after the end. This option lets you have that:
+
+    fimfic-footnote-pre: true
+
+You can get sidenotes with a configuration like this:
+
+    ---
+    fimfic-footnote-pre: true
+    fimfic-footnote-brackets: false
+    fimfic-footnote-block-tag: ["[right_insert]","[/right_insert]"]
+    fimfic-footnote-block: ""
+    ...
+
+Beware: Fimfiction does not have a clearfix anywhere in story output, which
+means that an overly long footnote block in a right insert will interfere with
+footnote blocks for subsequent paragraphs, story footer, comments, and the
+rest of the site user interface.
