@@ -90,7 +90,7 @@ function Space()
 end
 
 function SoftBreak()
-    return "\n"
+    return " "
 end
 
 function LineBreak()
