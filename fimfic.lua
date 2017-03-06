@@ -484,6 +484,9 @@ function Div(s, attr)
         o = o .. "{{!verse_end!}}"
         text = o
     end
+    if attr['class'] == 'letter' then
+        text = "[quote]" .. text .. "[/quote]"
+    end
     if attr['class'] == "center" then
         text = "[center]" .. text .. "[center]"
     end
