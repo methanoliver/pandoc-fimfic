@@ -318,3 +318,12 @@ For sidenotes, I use this:
     fimfic-footnote-marker-style: ["[strong][sup]{{!fnscale!}}", "{{!fnscale_end!}}[/sup][/strong]", "[strong]", ".[/strong]\ "]
     fimfic-footnote-block-tag: ["[figure=right]\n{{!fnscale!}}", "{{!fnscale_end!}}[/figure]"]
     ...
+
+For endnotes, this:
+
+    ---
+    fimfic-endnotes: true
+    fimfic-footnote-pre: false
+    fimfic-footnote-marker-style: ["[strong][sup]{{!fnscale!}}(", "){{!fnscale_end!}}[/sup][/strong]", "[strong](", ")[/strong] "]
+    fimfic-footnote-block-tag: ["[quote=Footnotes]{{!fnscale!}}", "{{!fnscale_end!}}[/quote]"]
+    ...
