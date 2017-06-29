@@ -13,9 +13,6 @@ and is primarily different by much more extensive support for styling
 footnotes, as well as other customizations and updates to changes in
 Fimfiction bbcode emulation.
 
-For a reference of bbcode tags supported by FimFiction,
-see [BBCODE.md](BBCODE.md)
-
 Usage
 -----
 
@@ -29,8 +26,8 @@ box on FimFiction, usually unchanged.
 Compatibility
 -------------
 
-This listing will focus on Markdown, HTML, and MS Word DOCX input formats, as
-I believe these will be the most commonly used.
+This listing will focus on Markdown, as this is the source format I am using,
+and I have so far not seen an indication anyone but me is employing this tool.
 
 ### What Works ###
 
@@ -48,17 +45,22 @@ I believe these will be the most commonly used.
     will be an image given an explicit `{.centered}` class.
 
 *   **Links**: Links to off-site resources will be rendered as usual.  Links
-    to Fimfiction itself will be rendered using the `[site_url]` tag.  You can
-    use a link to youtube to produce a centered youtube video tag by giving
+    to Fimfiction itself will be rendered as relative links.  You can
+    use a link to youtube to produce an embedded youtube video tag by giving
     the link a "youtube" class. In Markdown, this is done like this:
 
         [This will be used as caption](https://www.youtube.com/watch?v=C9H_FDZGkUw){.youtube}
 
-*   **Code**: Fimfiction has a `[code]` tag, which works for block level, but
-    does not work for inline, and it still executes the bbcode inside it. But
-    this formatter works around this by inserting `[b][/b]` after every
-    opening bracket, thus preventing the execution of bbcode inside code
-    blocks and producing reasonable-looking fixed width output.
+*   **Code**: Fimfiction has code tags. You can specify a language for syntax
+    highlighting like this:
+
+        ``` {.python}
+        # This here will be highlighted as python code.
+        ```
+
+    Fimfiction uses Prism to do the syntax highlighting, so you can refer to
+    the list of supported languages
+    in [Prism manual.](http://prismjs.com/#languages-list)
 
 *   **Basic Styles**: Block quotes are output correctly. FimFiction does not
     have proper Headings, but sensible equivalent formatting will be used, and
@@ -69,23 +71,25 @@ I believe these will be the most commonly used.
     and be converted if possible. Never apply paragraph formatting directly,
     as this will _not_ be converted.
 
-*   **Footnotes**: Footnotes will be gathered together and inserted after the
-    paragraph they appear in, rendered in a marked up quote block.  Footnotes
-    use unicode characters to imitate superscript, because Fimfiction does not
-    have the capability for real superscript.
+*   **Footnotes**: There are multiple configuration options relating to how to
+    style footnotes. Read on.
+
+*   **Lists**: After the recent update, Fimfiction includes full support for
+    definition lists.
 
 *   **BBCode**: When all else fails, you can use bbcode directly in your
     document. Pandoc will pass any bbcode found through without changing it,
-    while still converting whatever it can.
+    while still converting whatever it can. Occasionally, this might cause it
+    to recognize bbcode as links, in which case, you can escape the square
+    brackets with a backslash.
 
 
 ### What Kind of Works ###
 
-*   **Lists \& Tables**: Bullet, Number, and Definition lists are output as
-    plain-text versions of the lists using FontAwesome markers for list
-    bullets. FimFiction does not support lists in its bbcode, so no better
-    options are possible. This is also true of tables.
-    
+*   **Tables**: Are not being tested and probably do not work. Fimfiction has
+    no support for tables, and the only hope of imitating them is using
+    pre-formatted text.
+
 *   **Divs**: Fimfiction has no concept of a Pandoc div. However, a provision
     to mark up verse as a div by giving it a class has been coded:
 
@@ -167,39 +171,28 @@ Where config.yaml looks something like this:
 ---
 fimfic-no-indent: true
 fimfic-single-space: false
-fimfic-section-break: "`[center][size=1.25em][b]✶              ✶              ✶[/b][/size][/center]`"
+fimfic-section-break: "[center][size=1.25em][b]✶     ✶     ✶[/b][/size][/center]"
 ...
 ```
 
-Notice the use of backticks for fimfic-section-break. Pandoc interprets string
-literals in embedded metadata variables as Markdown strings, and using
-backticks prevents it from compressing the spaces.
+Notice the use of special [non-breaking Unicode space character][nbsp] for
+fimfic-section-break. Pandoc interprets string literals in embedded metadata
+variables as Markdown strings, in which regular spaces would be compressed.
+
+[nbsp]: http://www.fileformat.info/info/unicode/char/00a0/index.htm
 
 All of the options have a `fimfic-` prefix to avoid clashing with any other
 Metadata used in the document.
 
-#### fimfic-single-space ####
-
-By default paragraphs are formatted with a blank space in between them, so
-they will be double-spaced when published. If you prefer single-spaced
-paragraphs, include this option and give it any non-nil value, eg.
-`fimfic-single-space: True`. This will remove the extra spaces between
-paragraphs. This will still include double spaces around Heading and section
-breaks, for clarity.
-
-#### fimfic-no-indent ####
-
-By default paragraphs are formatted with an indent, as this is the most common
-formatting currently seen on FimFiction. If you prefer paragraphs with no
-indent, include this option with any non-nil value and paragraphs will not be
-automatically indented.
+### General styling
 
 #### fimfic-header-1 to fimfic-header-6 ####
 
-FimFiction does not have BBCode especially for Headers, so in order to create
-headers they must be formatted directly using relevant BBCode tags. Each of
-these options expects a List of two (2) Strings, which will be output before
-and after the text of the Heading.
+FimFiction does have BBCode especially for Headers. However, occasionally this
+might not be what you want it to do, -- for example, `h4` is not styled at all
+-- so an option to substitute them is provided.Each of these options expects a
+List of two (2) Strings, which will be output before and after the text of the
+Heading.
 
 For example, if we define `fimfic-header-2` like this:
 
@@ -222,15 +215,6 @@ complain. If you wish to only use one, have an empty string `""` for the
 other. The lists can also but written in between brackets, like in JSON:
 `fimfiction-header-5: ["[b]" , "[/b]"]`
 
-The default definitions of these Headers is below.
-
-    fimfic-header-1: ["[center][size=2em]", "[/size][/center]"]
-    fimfic-header-2: ["[center][size=1.5em]", "[/size][/center]"]
-    fimfic-headar-3: ["[center][b]", "[/b][/center]"]
-    fimfic-header-4: ["[center][b]", "[/b][/center]"]
-    fimfic-header-5: ["[center][i]", "[/i][/center]"]
-    fimfic-header-6: ["[center]", "[/center]"]
-
 #### fimfic-section-break ####
 
 This option allows you to customize the way section breaks are formatted in
@@ -241,36 +225,8 @@ instead, eg.
     fimfic-section-break: [center]* * * * *[/center]
 
 Remember that the contents of this string will be interpreted as Markdown, so
-you will need to escape some characters with backslash (` \\ `) or backticks if
-you do not want them to be converted.
-
-#### fimfic-footnote-block ####
-
-This option allows you to customize the start of the footnote block.  As
-footnotes are output in quote blocks, a need exists to distinguish them
-visually from other quote blocks. They are printed with reduced font size, and
-with this string at the beginning of the block. By default, this is 40
-repetitions of a low horizontal wavy line character, "﹏", with a trailing
-newline. You can set it to an empty string if you like.
-
-#### fimfic-verse-style ####
-
-By default, every line of a verse block is wrapped with `[i][/i]`. This is
-obviously not to everybody's taste, so you can configure the wrapper tag just
-like you can configure a header:
-
-    fimfic-verse-style: ["[size=1.1em][i]", "[/i][/size]"]
-
-#### fimfic-verse-indent ####
-
-The aforementioned verse blocks are indented with a number of spaces, 8 by
-default. Fimfiction, contrary to the common practices, does not compress
-spaces in resulting HTML, preferring to render all spaces beyond the first one
-with `&nbsp;` in every run of spaces longer than one, which is a crude but
-workable way to set up paragraphs with specific indents.
-
-This option lets you change the number of spaces the verse block will be
-indented by.
+you will need to escape some characters with backslash (` \\ `) if you do not
+want them to be processed.
 
 #### fimfic-image-caption ####
 
@@ -279,12 +235,41 @@ rendered with, which is `[b][/b]` by default:
 
     fimfic-image-caption: ["[b]", "[/b]"]
 
-#### fimfic-list-bullet ####
+#### fimfic-verse-wrapper ####
 
-When rendering bulleted list, this is the sequence of characters that will be
-used for the list bullet.
+Verse blocks are wrapped with the `[pre-line]` tag. However, you may want to additionally wrap them into something else. The default value is:
 
-    fimfic-list-bullet: "`[b][icon]caret-right[/icon][/b]`"
+    fimfic-verse-style: ["[indent=2][i]", "[/i][/indent]"]
+    
+Notice the use of `[i]` rather than `[em]`.
+
+### Footnote
+
+Several options are provided to style footnotes, since there is no way to make
+in-document links on Fimfiction, and the readers don't like to scroll all the
+way to the end and then back. I tried asking for an anchor tag, which idea was
+enthusiastically discussed for a few minutes and then quietly forgotten, so we
+have what we have.
+
+Footnote bodies can be inserted into the end of the entire document, (endnotes) before the paragraph their references occur in (sidenotes) or after that paragraph (inline footnotes). The default is inline footnotes.
+
+#### fimfic-endnotes ####
+
+To get endnotes, you you can set this flag:
+
+    fimfic-endnotes: true
+
+#### fimfic-footnote-pre ####
+
+To get sidenotes:
+
+    fimfic-footnote-pre: true
+
+Actually getting sidenotes you're happy with requires further configuration,
+see below. Beware: Fimfiction does not have a clearfix between paragraphs,
+which means that an overly long footnote block in a figure tag -- which is how
+you get sidenotes -- will interfere with footnote blocks for subsequent
+paragraphs, story footer, comments, and the rest of the site user interface.
 
 #### fimfic-footnote-scale ####
 
@@ -294,56 +279,41 @@ font size, set this value:
 
     fimfic-footnote-scale: 1.1em
 
-#### fimfic-footnote-brackets ####
-
-While it is not possible to make in-page anchor links on Fimfiction, most
-browsers treat superscript characters the same as their regular counterparts
-for the purposes of in-page search. It may be more convenient to put footnote
-markers in brackets, because then, searching for "(1)" will allow the reader
-to quickly jump between the footnote text and the footnote marker. If you want
-this to happen, set this value to true:
-
-    fimfic-footnote-brackets: true
+Scaling footnotes is accomplished by the use of a pseudo-tag, `{{!fnscale!}}`
+and `{{!fnscale_end!}}` which you might need to use to construct your own
+`fimfic-footnote-block-tag`.
 
 #### fimfic-footnote-block-tag ####
 
-Normally, footnotes are placed in `[quote]` blocks. However, there is a case
-for using sidenotes -- using a `[right_insert]` block, for example. This
-variable lets you configure that.
+This option allows you to customize the start and end of the footnote blocks. The default, for inline footnotes, is
 
-    fimfic-footnote-block-tag: ["[right_insert]","[/right_insert]"]
+    fimfic-footnote-block-tag: ["[quote=Footnotes]{{!fnscale!}}", "{{!fnscale_end!}}[/quote]"]
 
-You need both the opening and the closing tag.
+That is, footnote bodies are collected into a quote block and wrapped with a `[size=...]` tag of a given footnote scale.
 
-#### fimfic-endnotes ####
+#### fimfic-footnote-marker-style ####
 
-By default, for readability, footnotes are rendered immediately after the
-block they are used in, since there is no way to make in-document links on
-Fimfiction, and the readers don't like to scroll all the way to the end and
-then back.  Sometimes, however, the effect you're aiming for requires
-footnotes to be shown at the end of the chapter anyway, and you _want_ to
-surprise the reader. In this case, you can set this flag:
+While it is not possible to make in-page anchor links on Fimfiction, most
+browsers treat superscript characters the same as their regular counterparts
+for the purposes of in-page search. It is convenient to put footnote markers
+in brackets, because then, searching for "(1)" will allow the reader to
+quickly jump between the footnote text and the footnote marker. This configuration option allows you to control this:
 
-    fimfic-endnotes: true
+    fimfic-footnote-marker-style:
+        - "[strong][sup]{{!fnscale!}}("
+        - "){{!fnscale_end!}}[/sup][/strong]"
+        - "[strong]("
+        - ")[/strong]"
 
-#### fimfic-footnote-pre ####
+The first two are what the footnote reference will be wrapped into, the second two are what the footnote number will be wrapped into when rendered in footnote bodies.
 
-But if you changed the footnote block tag to `[right_insert]`, you want the
-footnote block to appear *before* the start of the paragraph, rather than
-after the end. This option lets you have that:
+### Common configurations
 
-    fimfic-footnote-pre: true
-
-You can get sidenotes with a configuration like this:
+For sidenotes, I use this:
 
     ---
+    fimfic-endnotes: false
     fimfic-footnote-pre: true
-    fimfic-footnote-brackets: false
-    fimfic-footnote-block-tag: ["[right_insert]","[/right_insert]"]
-    fimfic-footnote-block: ""
+    fimfic-footnote-marker-style: ["[strong][sup]{{!fnscale!}}", "{{!fnscale_end!}}[/sup][/strong]", "[strong]", ".[/strong]\ "]
+    fimfic-footnote-block-tag: ["[figure=right]\n{{!fnscale!}}", "{{!fnscale_end!}}[/figure]"]
     ...
-
-Beware: Fimfiction does not have a clearfix anywhere in story output, which
-means that an overly long footnote block in a right insert will interfere with
-footnote blocks for subsequent paragraphs, story footer, comments, and the
-rest of the site user interface.

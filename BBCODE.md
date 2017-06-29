@@ -1,5 +1,9 @@
 # FimFiction BBcode reference
 
+This document is primarily of historical interest, since the new BBCode parser
+of FimFiction is well documented. However, it documents legacy tags which the
+new parser supports *quietly* and as such, might end up being useful.
+
 When trying to figure out how to get the typography you want, it helps to know
 just what exactly is FimFiction's BBcode parser capable of. Unfortunately,
 it's not really well-documented, and many of the tags in this list were
