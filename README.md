@@ -190,7 +190,7 @@ Metadata used in the document.
 
 FimFiction does have BBCode especially for Headers. However, occasionally this
 might not be what you want it to do, -- for example, `h4` is not styled at all
--- so an option to substitute them is provided.Each of these options expects a
+-- so an option to substitute them is provided. Each of these options expects a
 List of two (2) Strings, which will be output before and after the text of the
 Heading.
 
@@ -293,11 +293,12 @@ That is, footnote bodies are collected into a quote block and wrapped with a `[s
 
 #### fimfic-footnote-marker-style ####
 
-While it is not possible to make in-page anchor links on Fimfiction, most
-browsers treat superscript characters the same as their regular counterparts
-for the purposes of in-page search. It is convenient to put footnote markers
-in brackets, because then, searching for "(1)" will allow the reader to
-quickly jump between the footnote text and the footnote marker. This configuration option allows you to control this:
+While it is not possible to make in-page anchor links on Fimfiction, for the
+purposes of in-page search superscript text is equivalent to
+non-superscript. It is convenient to put footnote markers in brackets, because
+then, searching for `(1)` will allow the reader to quickly jump between the
+footnote text and the footnote marker. This configuration option allows you to
+control this:
 
     fimfic-footnote-marker-style:
         - "[strong][sup]{{!fnscale!}}("
