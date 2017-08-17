@@ -116,9 +116,9 @@ function Link(s, src, tit, attr)
             src = string.gsub(src, v, "")
         end
         if isempty(s) then
-            return "[center][embed]https://www.youtube.com/watch%?v=" .. src .. "][/embed][/center]"
+            return "[center][embed]https://www.youtube.com/watch?v=" .. src .. "][/embed][/center]"
         end
-        return "[center][embed]https://www.youtube.com/watch%?v=" .. src .. "][/embed]{{!figcaption!".. s .."!}}[/center]"
+        return "[center][embed]https://www.youtube.com/watch?v=" .. src .. "[/embed]{{!figcaption!".. s .."!}}[/center]"
     end
     -- Everything else is a regular old url.
     return "[url=" .. src .. "]" .. s .. "[/url]"
