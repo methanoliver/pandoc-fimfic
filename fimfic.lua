@@ -184,7 +184,7 @@ function Note(s)
 end
 
 -- These are Unicode open and close quote characters.
--- Used with pandoc's -s option
+-- Used with pandoc's +smart option
 function SingleQuoted(s)
     return "‘" .. s .. "’"
 end
@@ -248,7 +248,7 @@ function insert_footnotes(block)
                 block = block:gsub(fn_key,'')
             end
         end
-        if table.getn(buff) > 0 then
+        if #buff > 0 then
             block = "{{!footnote_bodies_pre!".. table.concat(buff,"!") ..
                 "!}}" .. block .. "{{!footnote_bodies_post!"..
                 table.concat(buff,"!") .. "!}}"
@@ -309,11 +309,7 @@ function Para(s)
     return insert_footnotes(s)
 end
 
--- FimFiction has no concept of a Header.
--- Everything is a paragraph. There are options
--- that allow the user to customize how Headers are
--- output in the final document.
--- Attribute on Headers are currently ignored.
+-- FimFiction has headers, but we might want to customize them.
 function Header(lev, s, attr)
     return "{{!h" .. lev .. "!" .. s .. "!}}"
 end
@@ -370,10 +366,8 @@ end
 function DefinitionList(items)
     local buffer = {}
     for _,item in pairs(items) do
-        for k, v in pairs(item) do
-            table.insert(buffer,"[strong]" .. k .. ":[/strong] " ..
-                table.concat(v,", "))
-        end
+        table.insert(buffer,"[strong]" .. item[1] .. ":[/strong] " ..
+                         table.concat(item[2], ", "))
     end
     return insert_footnotes(table.concat(buffer, "\n"))
 end

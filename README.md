@@ -13,6 +13,8 @@ and is primarily different by much more extensive support for styling
 footnotes, as well as other customizations and updates to changes in
 Fimfiction bbcode emulation.
 
+Works with Pandoc v2.0.1 or newer.
+
 Usage
 -----
 
