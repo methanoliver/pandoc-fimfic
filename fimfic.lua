@@ -365,9 +365,13 @@ end
 -- But proper list tags do not include definition lists.
 function DefinitionList(items)
     local buffer = {}
+    -- These are individual definitions.
     for _,item in pairs(items) do
-        table.insert(buffer,"[strong]" .. item[1] .. ":[/strong] " ..
-                         table.concat(item[2], ", "))
+        -- but we still need to iterate over that because pandoc is being stupid.
+        for k, v in pairs(item) do
+             table.insert(buffer, "[strong]" .. k .. ":[/strong] " ..
+                              table.concat(v, ", "))
+        end
     end
     return insert_footnotes(table.concat(buffer, "\n"))
 end
