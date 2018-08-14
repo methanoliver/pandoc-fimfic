@@ -157,18 +157,22 @@ function CaptionedImage(src, tit, caption, attr)
 end
 
 -- Inline code is supported by FimFiction. Which is actually a bit annoying.
+-- For literary purposes, it's best rendered as monospace, though:
+-- should anyone actually want to talk about actual code,
+-- a codeblock is a better option.
+-- But I want to make that configurable at runtime...
 function Code(s, attr)
-    return "[code]" .. s .. "[/code]"
+    return "{!inlinecodestart!}" .. s .. "{!inlinecodeend!}"
 end
 
--- FimFiction has no support for "math mode"
--- Just pass text through
+-- FimFiction does support "math mode" -- in MathJax terms.
+-- Best effort is to pass this through.
 function InlineMath(s)
-    return s
+    return "[math]" .. s .. "[/math]"
 end
 
 function DisplayMath(s)
-    return s
+    return "[mathblock]" .. s .. "[/mathblock]"
 end
 
 -- FimFiction does not have proper support for footnotes,
@@ -429,6 +433,15 @@ function Doc(text, metadata, variables)
 
     -- Replace temporary markup with correct markup now
     -- that the metadata is available.
+
+    -- Code tag is switchable:
+    if metadata["fimfic-inline-code"] then
+        body = body:gsub("{!inlinecodestart!}", metadata["fimfic-inline-code"][1])
+        body = body:gsub("{!inlinecodeend!}", metadata["fimfic-inline-code"][2])
+    else
+        body = body:gsub("{!inlinecodestart!}", "[code]")
+        body = body:gsub("{!inlinecodeend!}", "[/code]")
+    end
 
     -- Verse wrapping is configurable:
     if metadata["fimfic-verse-wrapper"] then

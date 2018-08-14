@@ -29,7 +29,8 @@ Compatibility
 -------------
 
 This listing will focus on Markdown, as this is the source format I am using,
-and I have so far not seen an indication anyone but me is employing this tool.
+and I have so far not seen an indication anyone but me is employing this
+tool. If you do use it, send me a line!
 
 ### What Works ###
 
@@ -56,7 +57,7 @@ and I have so far not seen an indication anyone but me is employing this tool.
 *   **Code**: Fimfiction has code tags. You can specify a language for syntax
     highlighting like this:
 
-        ``` {.python}
+        ```{.python}
         # This here will be highlighted as python code.
         ```
 
@@ -103,6 +104,17 @@ and I have so far not seen an indication anyone but me is employing this tool.
         Of them I am but one...
 
         </div>
+        
+    Or use the new syntax:
+    
+        :::{.verse}
+        
+        This works the same\
+        Or maybe not\
+        Observe the problems\
+        It hath wrought...
+        
+        :::
 
     Unless you change the code, this will render the said div with an extra
     indent and in italics. Notice the backslashes at the ends of the lines,
@@ -139,6 +151,14 @@ and I have so far not seen an indication anyone but me is employing this tool.
         style it so that it's right-aligned in html or epub, too.
 
         </div>
+        
+    You can also use the new Markdown syntax for divs with a class:
+    
+        :::{.right}
+        
+        This will be right-aligned.
+        
+        :::
 
 ### What Does Not Work ###
 
@@ -244,6 +264,15 @@ Verse blocks are wrapped with the `[pre-line]` tag. However, you may want to add
     fimfic-verse-style: ["[indent=2][i]", "[/i][/indent]"]
     
 Notice the use of `[i]` rather than `[em]`.
+
+#### fimfic-inline-code ####
+
+Fimfiction provides both a `[code]` tag and a `[mono]` tag, which get rendered
+differently. Markdown permits you to enter inline code, which, by default,
+gets rendered as `[code]`. But sometimes it makes sense to use `[mono]` or
+something else entirely. You can configure it like this:
+
+    fimfic-inline-code: ["[mono]", "[/mono]"]
 
 ### Footnote
 
