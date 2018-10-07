@@ -405,6 +405,37 @@ function Table(caption, aligns, widths, headers, rows)
     return insert_footnotes(table.concat(buffer,'\n'))
 end
 
+-- Some trickery: Imitating cursive script through Unicode abuse.
+-- Namely, we're going to exploit the Mathematical Styled Latin section.
+
+function string:split_on_space()
+    local result = {}
+    for token in self:gmatch('[^ ]+') do
+        table.insert(result, token)
+    end
+    return result
+end
+
+function string:tr_spaced(from, to)
+    from, to = from:split_on_space(), to:split_on_space()
+    assert(#from == #to, "#from = "..tostring(#from)..", #to = "..tostring(#to))
+    local conversion_table = {}
+    for i = 1, #from do
+        conversion_table[from[i]] = to[i]
+    end
+    local result = self:gsub("%w", conversion_table)
+    return result -- to suppress gsub's second return value
+end
+
+function UnicodeCursive(s)
+    return tostring(s):tr_spaced(
+        "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z " ..
+            "a b c d e f g h i j k l m n o p q r s t u v w x y z ",
+        "𝓐 𝓑 𝓒 𝓓 𝓔 𝓕 𝓖 𝓗 𝓘 𝓙 𝓚 𝓛 𝓜 𝓝 𝓞 𝓟 𝓠 𝓡 𝓢 𝓣 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 " ..
+            "𝓪 𝓫 𝓬 𝓭 𝓮 𝓯 𝓰 𝓱 𝓲 𝓳 𝓴 𝓵 𝓶 𝓷 𝓸 𝓹 𝓺 𝓻 𝓼 𝓽 𝓾 𝓿 𝔀 𝔁 𝔂 𝔃 "
+    )
+end
+
 -- FimFiction has no concept of Divs or the possible
 -- attribute they could have. But we can use them to apply fimfiction formatting.
 function Div(s, attr)
@@ -415,7 +446,7 @@ function Div(s, attr)
         text = "{{!verse_wrapper_start!}}[pre-line]" .. text .. "[/pre-line]{{!verse_wrapper_end!}}"
     end
     if attr['class'] == 'letter' then
-        text = "[quote]" .. text .. "[/quote]"
+        text = "[quote]" .. UnicodeCursive(text) .. "[/quote]"
     end
     if attr['class'] == "center" then
         text = "[center]" .. text .. "[center]"

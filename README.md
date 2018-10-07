@@ -160,6 +160,31 @@ tool. If you do use it, send me a line!
         
         :::
 
+### Extra trickery ###
+
+There are times when one wishes to achieve a specific typesetting effect which
+is not normally feasible with the constraints of FimFiction BBCode. Some of
+this trickery, which would be easy enough using CSS in HTML or EPUB, is
+realized here by assigning a class to a div. Whether you want to use them or
+not is up to you:
+
+* **Letters**: Class `letter` will render something in a `[quote]` block,
+  replacing Latin letters with their equivalents from the Mathematical Styled
+  Latin codeblock, mandated by MathML standard. This results in a neat letter
+  written in cursive, like so: 𝓐𝓑𝓒𝓓𝓔𝓕... The resulting letters render normally
+  on most platforms so far seen, but might not survive various ebook
+  readers. I encourage you to publish your own EPUB file if this is a concern,
+  where you can employ CSS styling as you see fit -- but this is a good idea in
+  any case.
+
+        :::{.letter}
+        
+        Dear Princess Celestia,
+        
+        ...
+        
+        :::
+
 ### What Does Not Work ###
 
 *   **Direct Formating**: Directly applying paragraph formatting in MS Word
