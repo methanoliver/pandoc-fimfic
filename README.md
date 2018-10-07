@@ -183,10 +183,11 @@ not is up to you:
   replacing Latin letters with their equivalents from the Mathematical Styled
   Latin codeblock, mandated by MathML standard. This results in a neat letter
   written in cursive, like so: 𝓐𝓑𝓒𝓓𝓔𝓕... The resulting letters render normally
-  on most platforms so far seen, but might not survive various ebook
-  readers. I encourage you to publish your own EPUB file if this is a concern,
+  on most platforms so far seen, except Nvidia Shield, for some bizarre
+  reason. I encourage you to publish your own EPUB file if this is a concern,
   where you can employ CSS styling as you see fit -- but this is a good idea in
-  any case.
+  any case. One notable limitation of this is that no formatting can occur
+  *inside* the letter block -- it will be mangled by the process.
 
         :::{.letter}
         
@@ -199,7 +200,8 @@ not is up to you:
 * **Blackletter**: One other notable abuse of extra Unicode symbols that
   appears to work well is
   [Blackletter](https://en.wikipedia.org/wiki/Blackletter), or what is
-  colloquially called, "Goth font" or "Fraktur": 𝕲𝖔𝖙𝖍
+  colloquially called, "Goth font" or "Fraktur": 𝕲𝖔𝖙𝖍. It has the same
+  limitations as the letter block.
 
         [I don't recommend using it often.]{.blackletter}
         
@@ -383,6 +385,12 @@ control this:
         - ")[/strong]"
 
 The first two are what the footnote reference will be wrapped into, the second two are what the footnote number will be wrapped into when rendered in footnote bodies.
+
+#### fimfic-disable-unicode-trickery ###
+
+If you wish to use the `.letter` and `.blackletter` classes throughout your
+writing, but find that you need to turn it off in some cases you can set this
+variable to true. `.letter` will just be rendered as a `[quote]` block, while `.blackletter` will become a simple `[b]`.
 
 ### Common configurations
 

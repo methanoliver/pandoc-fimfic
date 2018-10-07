@@ -224,7 +224,7 @@ function Span(s, attr)
     end
     if attr["class"] then
         if attr["class"] == "blackletter" then
-            text = Blackletter(text)
+            text = "{{!blackletter!" .. text .. "!}}"
         end
     end
     return text
@@ -461,7 +461,7 @@ function Div(s, attr)
         text = "{{!verse_wrapper_start!}}[pre-line]" .. text .. "[/pre-line]{{!verse_wrapper_end!}}"
     end
     if attr['class'] == 'letter' then
-        text = "[quote]" .. UnicodeCursive(text) .. "[/quote]"
+        text = "[quote]{{!cursive!}}" .. text .. "{{!cursiveend!}}[/quote]"
     end
     if attr['class'] == "center" then
         text = "[center]" .. text .. "[center]"
@@ -594,6 +594,15 @@ function Doc(text, metadata, variables)
             metadata["fimfic-image-caption"][1] .. "%1" .. metadata["fimfic-image-caption"][2])
     else
         body = body:gsub("{{!figcaption!(.-)!}}", "[strong]%1[/strong]")
+    end
+
+    -- Fake font spans and blocks.
+    if metadata["fimfic-disable-unicode-trickery"] then
+        body = body:gsub("{{!blackletter!(.-)!}}", "[b]%1[/b]")
+        body = body:gsub("{{!cursive!}}(.-){{!cursiveend!}}", "%1")
+    else
+        body = body:gsub("{{!blackletter!(.-)!}}", Blackletter)
+        body = body:gsub("{{!cursive!}}(.-){{!cursiveend!}}", UnicodeCursive)
     end
 
     -- Faux emoji:
