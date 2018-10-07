@@ -200,7 +200,7 @@ end
 -- FimFiction allows text to have size and color set,
 -- which is not possible in MarkDown. As a workaround,
 -- this will detect Spans that have relevant style
--- attributes set
+-- attributes set, or act on specific given classes.
 function Span(s, attr)
     local text = s
     if attr["style"] then
@@ -220,6 +220,11 @@ function Span(s, attr)
         local _, _, caps = attr["style"]:find("variant%s*:%s*small%-caps")
         if caps then
             text = "[smcaps]" .. text .. "[/smcaps]"
+        end
+    end
+    if attr["class"] then
+        if attr["class"] == "blackletter" then
+            text = Blackletter(text)
         end
     end
     return text
@@ -433,6 +438,16 @@ function UnicodeCursive(s)
             "a b c d e f g h i j k l m n o p q r s t u v w x y z ",
         "𝓐 𝓑 𝓒 𝓓 𝓔 𝓕 𝓖 𝓗 𝓘 𝓙 𝓚 𝓛 𝓜 𝓝 𝓞 𝓟 𝓠 𝓡 𝓢 𝓣 𝓤 𝓥 𝓦 𝓧 𝓨 𝓩 " ..
             "𝓪 𝓫 𝓬 𝓭 𝓮 𝓯 𝓰 𝓱 𝓲 𝓳 𝓴 𝓵 𝓶 𝓷 𝓸 𝓹 𝓺 𝓻 𝓼 𝓽 𝓾 𝓿 𝔀 𝔁 𝔂 𝔃 "
+    )
+end
+
+-- For further Unicode abuse, we can have Blackletter.
+function Blackletter(s)
+    return tostring(s):tr_spaced(
+        "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z " ..
+            "a b c d e f g h i j k l m n o p q r s t u v w x y z ",
+        "𝕬 𝕭 𝕮 𝕯 𝕰 𝕱 𝕲 𝕳 𝕴 𝕵 𝕶 𝕷 𝕸 𝕹 𝕺 𝕻 𝕼 𝕽 𝕾 𝕿 𝖀 𝖁 𝖂 𝖃 𝖄 𝖅 " ..
+            "𝖆 𝖇 𝖈 𝖉 𝖊 𝖋 𝖌 𝖍 𝖎 𝖏 𝖐 𝖑 𝖒 𝖓 𝖔 𝖕 𝖖 𝖗 𝖘 𝖙 𝖚 𝖛 𝖜 𝖝 𝖞 𝖟 "
     )
 end
 

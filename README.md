@@ -196,6 +196,15 @@ not is up to you:
         
         :::
 
+* **Blackletter**: One other notable abuse of extra Unicode symbols that
+  appears to work well is
+  [Blackletter](https://en.wikipedia.org/wiki/Blackletter), or what is
+  colloquially called, "Goth font" or "Fraktur": 𝕲𝖔𝖙𝖍
+
+        [I don't recommend using it often.]{.blackletter}
+        
+        <span class="blackletter">But in moderation it can be cool.</span>
+
 ### What Does Not Work ###
 
 *   **Direct Formating**: Directly applying paragraph formatting in MS Word
