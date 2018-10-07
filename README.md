@@ -40,7 +40,8 @@ tool. If you do use it, send me a line!
     formatting in the output.
 
 *   **Basic Formating**: Bold, italic, underlines, and strike-throughs work
-    and are output correctly.
+    and are output correctly. Small caps requires the use of a `[Small
+    caps]{.smallcaps}` span in Markdown.
 
 *   **Images**: Cannot be embedded into the text, because FimFiction does not
     support data URLs, but can be linked to. In Markdown, an image used as a
@@ -65,9 +66,8 @@ tool. If you do use it, send me a line!
     the list of supported languages
     in [Prism manual.](http://prismjs.com/#languages-list)
 
-*   **Basic Styles**: Block quotes are output correctly. FimFiction does not
-    have proper Headings, but sensible equivalent formatting will be used, and
-    the formatting can be customized.
+*   **Basic Styles**: Block quotes are output correctly. While FimFiction does
+    have proper Headings these days, their formatting can be customized.
 
     Use Styles in MS Word. Ie. Use the drop-down menu of styles to choose the
     type of paragraph (Normal, Block Quote, Heading, etc.). This should work
@@ -78,53 +78,36 @@ tool. If you do use it, send me a line!
     style footnotes. Read on.
 
 *   **Lists**: After the recent update, Fimfiction includes full support for
-    definition lists.
+    all kinds of lists, except definition lists. These will be imitated
+    through a series of paragraphs starting with bold.
 
 *   **BBCode**: When all else fails, you can use bbcode directly in your
     document. Pandoc will pass any bbcode found through without changing it,
     while still converting whatever it can. Occasionally, this might cause it
     to recognize bbcode as links, in which case, you can escape the square
-    brackets with a backslash.
+    brackets with a backslash. Beware that using an URL in bbcode can cause
+    Pandoc to attempt to turn it into a link, dumping a load of bbcode where
+    you don't want it -- in which case, it helps to escape the `:` in it, like
+    `https\://...`
 
 
 ### What Kind of Works ###
 
 *   **Tables**: Are not being tested and probably do not work. Fimfiction has
     no support for tables, and the only hope of imitating them is using
-    pre-formatted text.
+    pre-formatted text, which, while theoretically possible within the
+    confines of a Pandoc formatter, is too cumbersome to bother with. Pull
+    requests welcome.
 
-*   **Divs**: Fimfiction has no concept of a Pandoc div. However, a provision
-    to mark up verse as a div by giving it a class has been coded:
+*   **Divs**: Fimfiction has no concept of a Pandoc div or span. However,
+    Pandoc divs and spans are used to give the formatter instructions
+    regarding FimFiction-specific markup, see below.
 
-        <div class="verse">
-
-        There is a mare in Canterlot\
-        They call the Rising Sun\
-        She loves all ponies in this world\
-        Of them I am but one...
-
-        </div>
-        
-    Or use the new syntax:
-    
-        :::{.verse}
-        
-        This works the same\
-        Or maybe not\
-        Observe the problems\
-        It hath wrought...
-        
-        :::
-
-    Unless you change the code, this will render the said div with an extra
-    indent and in italics. Notice the backslashes at the ends of the lines,
-    which indicate an explicit line break in Pandoc flavor of Markdown.
-
-*   **Small Caps, Colored text, Size**: This is due to a limitation of
-    Pandoc. Pandoc, generally, does not have markup for (or recognize)
-    small caps, colored text, or text with a size. As one exception,
-    text enclosed in `<span>` tags with an appripriate `style` attribute
-    set will be converted. Eg:
+*   **Small Caps, Colored text, Size**: This is a limitation of
+    Pandoc. Pandoc, generally, does not have markup for (or recognize) small
+    caps, colored text, or text with a size. Text enclosed in `<span>` tags
+    with an appripriate `style` attribute set will be rendered using
+    appropriate FimFiction tags, however. Eg:
 
         <span style="text-size: 2em;">Big Text</span>
 
@@ -167,6 +150,34 @@ is not normally feasible with the constraints of FimFiction BBCode. Some of
 this trickery, which would be easy enough using CSS in HTML or EPUB, is
 realized here by assigning a class to a div. Whether you want to use them or
 not is up to you:
+
+* **Verse**: You can use this to render verse in a way that will not break
+  formatting. The formatter uses `[pre-line]` and the results are
+  customizable:
+
+        <div class="verse">
+
+        There is a mare in Canterlot\
+        They call the Rising Sun\
+        She loves all ponies in this world\
+        Of them I am but one...
+
+        </div>
+        
+    Or use Pandoc's new syntax:
+    
+        :::{.verse}
+        
+        This works the same\
+        Or maybe not\
+        Observe the problems\
+        It hath wrought...
+        
+        :::
+
+    Unless you change the code, this will render the said div with an extra
+    indent and in italics. Notice the backslashes at the ends of the lines,
+    which indicate an explicit line break in Pandoc flavor of Markdown.
 
 * **Letters**: Class `letter` will render something in a `[quote]` block,
   replacing Latin letters with their equivalents from the Mathematical Styled
@@ -303,9 +314,9 @@ something else entirely. You can configure it like this:
 
 Several options are provided to style footnotes, since there is no way to make
 in-document links on Fimfiction, and the readers don't like to scroll all the
-way to the end and then back. I tried asking for an anchor tag, which idea was
-enthusiastically discussed for a few minutes and then quietly forgotten, so we
-have what we have.
+way to the end and then back. I tried asking for an anchor tag, which was an
+idea enthusiastically discussed for a few minutes and then quietly forgotten,
+so we have what we have.
 
 Footnote bodies can be inserted into the end of the entire document, (endnotes) before the paragraph their references occur in (sidenotes) or after that paragraph (inline footnotes). The default is inline footnotes.
 
@@ -324,8 +335,8 @@ To get sidenotes:
 Actually getting sidenotes you're happy with requires further configuration,
 see below. Beware: Fimfiction does not have a clearfix between paragraphs,
 which means that an overly long footnote block in a figure tag -- which is how
-you get sidenotes -- will interfere with footnote blocks for subsequent
-paragraphs, story footer, comments, and the rest of the site user interface.
+you get sidenotes -- can interfere with footnote blocks for subsequent
+paragraphs and the paragraphs themselves.
 
 #### fimfic-footnote-scale ####
 
