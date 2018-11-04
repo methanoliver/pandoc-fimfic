@@ -10,21 +10,16 @@
 --
 -- See README for more information and options for customization.
 
--- Table to store footnotes, so they can be included at the end.
-local notes = {}
+-- Version check: We require Pandoc 2.4 or later to run,
+-- because we use PANDOC_DOCUMENT, introduced in 2.4
+assert(PANDOC_VERSION[1] >= 2 and PANDOC_VERSION[2] >= 4,
+       "This writer requires Pandoc 2.4 or later.")
 
--- This script has options that can be customized with the
--- input file's metadata, but the metadata is only available
--- to the script in the "Doc" function, after most of the
--- markup has already been converted. Most of the file is
--- given temporary markup using the unlikely character
--- sequence "{{! ... !}}" so that it can be easily replaced
--- with the correct markup in the "Doc" function once the
--- options are available.
+-- Functions provided by pandoc
+local pipe = pandoc.pipe
+local stringify = (require "pandoc.utils").stringify
 
--- There is no option for proper superscript in FimFiction.
--- However, it is possible to imitate at least certain characters.
-
+-- Certain utility functions
 local function isempty(s)
     return s == nil or s == ''
 end
@@ -39,16 +34,77 @@ local function csplit(str,sep)
     return ret
 end
 
+function string:split_on_space()
+    local result = {}
+    for token in self:gmatch('[^ ]+') do
+        table.insert(result, token)
+    end
+    return result
+end
+
+function string:tr_spaced(from, to)
+    from, to = from:split_on_space(), to:split_on_space()
+    assert(#from == #to, "#from = "..tostring(#from)..", #to = "..tostring(#to))
+    local conversion_table = {}
+    for i = 1, #from do
+        conversion_table[from[i]] = to[i]
+    end
+    local result = self:gsub("%w", conversion_table)
+    return result -- to suppress gsub's second return value
+end
+
+-- Shorthand function to get at metadata.
+local function metavar(name, index)
+    local thatMeta = PANDOC_DOCUMENT.meta[name]
+    -- If we got nothing, return nil.
+    if thatMeta == nil then
+        return nil
+    end
+    -- If we attempted to get an index and this is not a metalist, also return nil.
+    if index and (
+        type(thatMeta) == 'boolean' or thatMeta.tag ~= 'MetaList'
+    ) then
+        return nil
+    end
+    -- Booleans are stored as booleans. Which stringify eats,
+    -- so we need to return these as is.
+    if type(thatMeta) == 'boolean' then
+        return thatMeta
+    end
+    -- Values stored as metainline need to be returned through stringify.
+    if thatMeta.tag == 'MetaInlines' then
+        return stringify(thatMeta)
+    end
+    -- List items need to be gotten out before getting stringified.
+    -- Notice that boolean list items won't work, but we don't use those.
+    if thatMeta.tag == 'MetaList' then
+        return stringify(thatMeta[index])
+    end
+    -- If we don't know what to do, return nil and print a warning.
+    io.stderr:write(string.format(
+                        "WARNING: Unhandled metavar type for var: '%s'", name
+    ))
+    return nil
+end
+
+-- Table to store footnotes, so they can be included at the end.
+local notes = {}
+
+--- Continuing with functions that rended corresponding pandoc elements.
+
 -- Blocksep is used to separate block elements.
 function Blocksep()
     return "\n\n"
 end
 
--- The functions that follow render corresponding pandoc elements.
--- s is always a string, attr is always a table of attributes, and
--- items is always an array of strings (the items in a list).
-
 function Str(s)
+
+    -- Faux emoji are handled here, at string level:
+    -- Font awesome.
+    s = s:gsub(":fa%-(.-):", "[icon]%1[/icon]")
+    -- Page break.
+    s = s:gsub(":page_break:", "[page_break]")
+
     return s
 end
 
@@ -98,13 +154,15 @@ function Link(s, src, tit, attr)
     local http = "http://www.fimfiction.net"
     local https = "https://www.fimfiction.net"
     if string.starts(src, http) then
-        return "[url=" .. string.sub(src,string.len(http)+1) .. "]" .. s .. "[/url]"
+        return "[url=" .. string.sub(src,string.len(http)+1)
+            .. "]" .. s .. "[/url]"
     end
     if string.starts(src, https) then
-        return "[url=" .. string.sub(src,string.len(https)+1) .. "]" .. s .. "[/url]"
+        return "[url=" .. string.sub(src,string.len(https)+1)
+            .. "]" .. s .. "[/url]"
     end
     -- Urls which have class 'youtube' will be assumed to refer to youtube
-    -- and rendered with [youtube] tag.
+    -- and rendered as an embed tag with a known working url.
     if attr["class"] == "youtube" then
         local youtube_table = {
             "https://www.youtube.com/watch%?v=",
@@ -116,9 +174,16 @@ function Link(s, src, tit, attr)
             src = string.gsub(src, v, "")
         end
         if isempty(s) then
-            return "[center][embed]https://www.youtube.com/watch?v=" .. src .. "][/embed][/center]"
+            return "[center][embed]https://www.youtube.com/watch?v=" ..
+                src .. "][/embed][/center]"
         end
-        return "[center][embed]https://www.youtube.com/watch?v=" .. src .. "[/embed]{{!figcaption!".. s .."!}}[/center]"
+        return "[center][embed]https://www.youtube.com/watch?v=" ..
+            src .. "[/embed]{{!figcaption!".. s .."!}}[/center]"
+    end
+    -- Urls which have class 'embed' will be wrapped in embed tag,
+    -- and let fimfiction sort it out whether it can or cannot embed it.
+    if attr["class"] == "embed" then
+        return "[center][embed]" .. src .. "[/embed][/center]"
     end
     -- Everything else is a regular old url.
     return "[url=" .. src .. "]" .. s .. "[/url]"
@@ -129,9 +194,16 @@ function captioned_img(src, caption)
         return "[center][img]" .. src .. "[/img][/center]"
     end
 
-    return "[center][img]" .. src .. "[/img]\n"..
-    "{{!figcaption!" .. caption .. "!}}"
-    .."[/center]"
+    local captionstart = metavar("fimfic-image-caption", 1)
+    local captionend =  metavar("fimfic-image-caption", 2)
+
+    if not captionstart then
+        captionstart = "[strong]"
+        captionend = "[/strong]"
+    end
+
+    return "[center][img]" .. src .. "[/img]\n" .. captionstart
+        .. caption .. captionend .. "[/center]"
 
 end
 
@@ -157,12 +229,17 @@ function CaptionedImage(src, tit, caption, attr)
 end
 
 -- Inline code is supported by FimFiction. Which is actually a bit annoying.
--- For literary purposes, it's best rendered as monospace, though:
+-- For literary purposes, it's best rendered as monospace:
 -- should anyone actually want to talk about actual code,
 -- a codeblock is a better option.
--- But I want to make that configurable at runtime...
+-- Fortunately, we can make this configurable at runtime.
 function Code(s, attr)
-    return "{!inlinecodestart!}" .. s .. "{!inlinecodeend!}"
+    if metavar("fimfic-inline-code", 1)
+    and metavar("fimfic-inline-code", 2) then
+        return metavar("fimfic-inline-code", 1) ..
+            s .. metavar("fimfic-inline-code", 2)
+    end
+    return "[code]" .. s .. "[/code]"
 end
 
 -- FimFiction does support "math mode" -- in MathJax terms.
@@ -184,7 +261,15 @@ function Note(s)
     table.insert(notes, s)
     -- Write out the footnote reference with targeting markers.
     local charnum = tonumber(num)
-    return '{{!sfn_sb_pre!}}' .. charnum .. '{{!sfn_sb_post!}}{{!fn'.. num ..'!}}'
+
+    local fnstart = "[strong][sup][size=0.75em]"
+    local fnend = "[/size][/sup][/strong]"
+    if metavar("fimfic-footnote-marker-style", 1) then
+        fnstart = metavar("fimfic-footnote-marker-style", 1)
+        fnend = metavar("fimfic-footnote-marker-style", 2)
+    end
+
+    return fnstart .. charnum .. fnend .. '{{!fn'.. num ..'!}}'
 end
 
 -- These are Unicode open and close quote characters.
@@ -274,8 +359,15 @@ function style_footnote_block(footnote_table)
 end
 
 function style_footnote_start(key, note)
-    return "{{!sfn_sbb_pre!}}" .. key .. '{{!sfn_sbb_post!}}' .. note
+    local fnstart = "[strong]("
+    local fnend = ")[/strong]"
+    if metavar("fimfic-footnote-marker-style", 3) then
+        fnstart = metavar("fimfic-footnote-marker-style", 3)
+        fnend = metavar("fimfic-footnote-marker-style", 4)
+    end
+    return fnstart .. key .. fnend .. note
 end
+
 
 function insert_footnote_bodies(block)
 
@@ -320,7 +412,11 @@ end
 
 -- FimFiction has headers, but we might want to customize them.
 function Header(lev, s, attr)
-    return "{{!h" .. lev .. "!" .. s .. "!}}"
+    if metavar("fimfic-header-" .. lev, 1) then
+        return metavar("fimfic-header-" .. lev, 1) ..
+            s .. metavar("fimfic-header-" .. lev, 2)
+    end
+    return "[h" .. lev .. "]" .. s .. "[/h" .. lev .."]"
 end
 
 function BlockQuote(s)
@@ -328,7 +424,10 @@ function BlockQuote(s)
 end
 
 function HorizontalRule()
-    return "{{!hr!}}"
+    if metavar("fimfic-section-break") then
+        return metavar("fimfic-section-break")
+    end
+    return "[hr]"
 end
 
 -- A LineBlock is a block which is pre-wrapped.
@@ -375,7 +474,7 @@ end
 function DefinitionList(items)
     local buffer = {}
     -- These are individual definitions.
-    for _,item in pairs(items) do
+    for _, item in pairs(items) do
         -- but we still need to iterate over that because pandoc is being stupid.
         for k, v in pairs(item) do
              table.insert(buffer, "[strong]" .. k .. ":[/strong] " ..
@@ -413,25 +512,6 @@ end
 -- Some trickery: Imitating cursive script through Unicode abuse.
 -- Namely, we're going to exploit the Mathematical Styled Latin section.
 
-function string:split_on_space()
-    local result = {}
-    for token in self:gmatch('[^ ]+') do
-        table.insert(result, token)
-    end
-    return result
-end
-
-function string:tr_spaced(from, to)
-    from, to = from:split_on_space(), to:split_on_space()
-    assert(#from == #to, "#from = "..tostring(#from)..", #to = "..tostring(#to))
-    local conversion_table = {}
-    for i = 1, #from do
-        conversion_table[from[i]] = to[i]
-    end
-    local result = self:gsub("%w", conversion_table)
-    return result -- to suppress gsub's second return value
-end
-
 function UnicodeCursive(s)
     return tostring(s):tr_spaced(
         "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z " ..
@@ -458,7 +538,13 @@ function Div(s, attr)
     if attr['class'] == 'verse' then
         -- If we've marked it as a verse, wrap it in [pre-line].
         -- Leave a marker for an indent tag.
-        text = "{{!verse_wrapper_start!}}[pre-line]" .. text .. "[/pre-line]{{!verse_wrapper_end!}}"
+        if metavar("fimfic-verse-wrapper", 1) then
+            text = metavar("fimfic-verse-wrapper", 1) ..
+                text .. metavar("fimfic-verse-wrapper", 2)
+        else
+            text = "[indent=2][i][pre-line]" .. text ..
+                "[/pre-line][/i][/indent]"
+        end
     end
     if attr['class'] == 'letter' then
         text = "[quote]{{!cursive!}}" .. text .. "{{!cursiveend!}}[/quote]"
@@ -477,26 +563,9 @@ end
 function Doc(text, metadata, variables)
     local body = text
 
-    -- Replace temporary markup with correct markup now
-    -- that the metadata is available.
-
-    -- Code tag is switchable:
-    if metadata["fimfic-inline-code"] then
-        body = body:gsub("{!inlinecodestart!}", metadata["fimfic-inline-code"][1])
-        body = body:gsub("{!inlinecodeend!}", metadata["fimfic-inline-code"][2])
-    else
-        body = body:gsub("{!inlinecodestart!}", "[code]")
-        body = body:gsub("{!inlinecodeend!}", "[/code]")
-    end
-
-    -- Verse wrapping is configurable:
-    if metadata["fimfic-verse-wrapper"] then
-        body = body:gsub("{{!verse_wrapper_start!}}", metadata["fimfic-verse-wrapper"][1])
-        body = body:gsub("{{!verse_wrapper_end!}}", metadata["fimfic-verse-wrapper"][2])
-    else
-        body = body:gsub("{{!verse_wrapper_start!}}", "[indent=2][i]")
-        body = body:gsub("{{!verse_wrapper_end!}}", "[/i][/indent]")
-    end
+    -- Replace temporary markup with correct markup -- it's easier to position
+    -- footnotes properly once we have the full text processed, rather
+    -- than before.
 
     -- If footnotes are to be installed at the beginning of the paragraph,
     -- clean out the paragraph-ending tags.
@@ -517,86 +586,22 @@ function Doc(text, metadata, variables)
         body = insert_footnote_bodies(body)
     end
 
-    -- Headers
-    -- With hopefully sensible defaults
-    if metadata["fimfic-header-1"] then
-        body = body:gsub("{{!h1!(.-)!}}", metadata["fimfic-header-1"][1] .. "%1" .. metadata["fimfic-header-1"][2])
-    else
-        body = body:gsub("{{!h1!(.-)!}}", "[h1]%1[/h1]")
-    end
-    if metadata["fimfic-header-2"] then
-        body = body:gsub("{{!h2!(.-)!}}", metadata["fimfic-header-2"][1] .. "%1" .. metadata["fimfic-header-2"][2])
-    else
-        body = body:gsub("{{!h2!(.-)!}}", "[h2]%1[/h2]")
-    end
-    if metadata["fimfic-header-3"] then
-        body = body:gsub("{{!h3!(.-)!}}", metadata["fimfic-header-3"][1] .. "%1" .. metadata["fimfic-header-3"][2])
-    else
-        body = body:gsub("{{!h3!(.-)!}}", "[h3]%1[/h3]")
-    end
-    if metadata["fimfic-header-4"] then
-        body = body:gsub("{{!h4!(.-)!}}", metadata["fimfic-header-4"][1] .. "%1" .. metadata["fimfic-header-4"][2])
-    else
-        body = body:gsub("{{!h4!(.-)!}}", "[h4]%1[/h4]")
-    end
-    if metadata["fimfic-header-5"] then
-        body = body:gsub("{{!h5!(.-)!}}", metadata["fimfic-header-5"][1] .. "%1" .. metadata["fimfic-header-5"][2])
-    else
-        body = body:gsub("{{!h5!(.-)!}}", "[h5]%1[/h5]")
-    end
-    if metadata["fimfic-header-6"] then
-        body = body:gsub("{{!h6!(.-)!}}", metadata["fimfic-header-6"][1] .. "%1" .. metadata["fimfic-header-6"][2])
-    else
-        body = body:gsub("{{!h6!(.-)!}}", "[h6]%1[/h6]")
-    end
-
-    -- Section breaks
-    -- By default is a [hr] tag (horizontal rule)
-    if metadata["fimfic-section-break"] then
-        body = body:gsub("{{!hr!}}", metadata["fimfic-section-break"])
-    else
-        body = body:gsub("{{!hr!}}", "[hr]")
-    end
-
     -- Footnote block tag. Wraps a footnote block.
     if metadata["fimfic-footnote-block-tag"] then
-        body = body:gsub("{{!footnote_block_begins!}}", metadata["fimfic-footnote-block-tag"][1])
-        body = body:gsub("{{!footnote_block_ends!}}", metadata["fimfic-footnote-block-tag"][2])
+        body = body:gsub("{{!footnote_block_begins!}}",
+                         metadata["fimfic-footnote-block-tag"][1])
+        body = body:gsub("{{!footnote_block_ends!}}",
+                         metadata["fimfic-footnote-block-tag"][2])
     else
-        body = body:gsub("{{!footnote_block_begins!}}", "[quote=Footnotes]{{!fnscale!}}")
-        body = body:gsub("{{!footnote_block_ends!}}", "{{!fnscale_end!}}[/quote]")
-    end
-    
-    -- Footnote brackets.
-    if metadata["fimfic-footnote-marker-style"] then
-        body = body:gsub("{{!sfn_sb_pre!}}", metadata["fimfic-footnote-marker-style"][1])
-        body = body:gsub("{{!sfn_sb_post!}}", metadata["fimfic-footnote-marker-style"][2])
-        body = body:gsub("{{!sfn_sbb_pre!}}", metadata["fimfic-footnote-marker-style"][3])
-        body = body:gsub("{{!sfn_sbb_post!}}", metadata["fimfic-footnote-marker-style"][4])
-    else
-        body = body:gsub("{{!sfn_sb_pre!}}", "[strong][sup]{{!fnscale!}}(")
-        body = body:gsub("{{!sfn_sb_post!}}", "){{!fnscale_end!}}[/sup][/strong]")
-        body = body:gsub("{{!sfn_sbb_pre!}}", "[strong](")
-        body = body:gsub("{{!sfn_sbb_post!}}", ")[/strong] ")
-    end
-
-    -- Footnote scale. Defaults to 0.75em
-    if metadata["fimfic-footnote-scale"] then
-        body = body:gsub("{{!fnscale!}}", "[size=" .. metadata["fimfic-footnote-scale"] .. "]")
-    else
-        body = body:gsub("{{!fnscale!}}", "[size=0.75em]")
-    end
-    body = body:gsub("{{!fnscale_end!}}", "[/size]")
-
-    -- Image caption styling.
-    if metadata["fimfic-image-caption"] then
-        body = body:gsub("{{!figcaption!(.-)!}}",
-            metadata["fimfic-image-caption"][1] .. "%1" .. metadata["fimfic-image-caption"][2])
-    else
-        body = body:gsub("{{!figcaption!(.-)!}}", "[strong]%1[/strong]")
+        body = body:gsub("{{!footnote_block_begins!}}",
+                         "[quote=Footnotes][size=0.75em]")
+        body = body:gsub("{{!footnote_block_ends!}}", "[/size][/quote]")
     end
 
     -- Fake font spans and blocks.
+    -- There is, unfortunately, no easy way to handle this correctly,
+    -- i.e. at Str level, since Str doesn't know whether it has any styled
+    -- parents. I'd have to walk the tree to do this.
     if metadata["fimfic-disable-unicode-trickery"] then
         body = body:gsub("{{!blackletter!(.-)!}}", "[b]%1[/b]")
         body = body:gsub("{{!cursive!}}(.-){{!cursiveend!}}", "%1")
@@ -604,12 +609,6 @@ function Doc(text, metadata, variables)
         body = body:gsub("{{!blackletter!(.-)!}}", Blackletter)
         body = body:gsub("{{!cursive!}}(.-){{!cursiveend!}}", UnicodeCursive)
     end
-
-    -- Faux emoji:
-    -- Font awesome.
-    body = body:gsub(":fa%-(.-):", "[icon]%1[/icon]")
-    -- Page break.
-    body = body:gsub(":page_break:", "[page_break]")
 
     return body
 end

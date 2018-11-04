@@ -13,7 +13,7 @@ and is primarily different by much more extensive support for styling
 footnotes, as well as other customizations and updates to changes in
 Fimfiction bbcode emulation.
 
-Works with Pandoc v2.0.1 or newer.
+Works with Pandoc v2.4 or newer.
 
 Usage
 -----
@@ -246,7 +246,10 @@ fimfic-section-break: "[center][size=1.25em][b]✶     ✶     ✶[/b]
 
 Notice the use of special [non-breaking Unicode space character][nbsp] for
 fimfic-section-break. Pandoc interprets string literals in embedded metadata
-variables as Markdown strings, in which regular spaces would be compressed.
+variables as Markdown strings, in which regular spaces would be
+compressed. You might want to use this character in some other places, since
+browsers interpret it directly, while fimfiction does not permit you to insert
+a non-breaking space otherwise.
 
 [nbsp]: http://www.fileformat.info/info/unicode/char/00a0/index.htm
 
@@ -306,10 +309,14 @@ rendered with, which is `[b][/b]` by default:
 
 #### fimfic-verse-wrapper ####
 
-Verse blocks are wrapped with the `[pre-line]` tag. However, you may want to additionally wrap them into something else. The default value is:
+Verse blocks are wrapped with the `[pre-line]` tag, as well as indented and
+italicized. However, you may want to wrap them into something else. The
+default value is:
 
-    fimfic-verse-style: ["[indent=2][i]", "[/i][/indent]"]
-    
+    fimfic-verse-style:
+        - "[indent=2][i][pre-line]"
+        - "[/pre-line][/i][/indent]"
+
 Notice the use of `[i]` rather than `[em]`.
 
 #### fimfic-inline-code ####
@@ -329,7 +336,9 @@ way to the end and then back. I tried asking for an anchor tag, which was an
 idea enthusiastically discussed for a few minutes and then quietly forgotten,
 so we have what we have.
 
-Footnote bodies can be inserted into the end of the entire document, (endnotes) before the paragraph their references occur in (sidenotes) or after that paragraph (inline footnotes). The default is inline footnotes.
+Footnote bodies can be inserted into the end of the entire document,
+(endnotes) before the paragraph their references occur in (sidenotes) or after
+that paragraph (inline footnotes). The default is inline footnotes.
 
 #### fimfic-endnotes ####
 
@@ -343,31 +352,21 @@ To get sidenotes:
 
     fimfic-footnote-pre: true
 
-Actually getting sidenotes you're happy with requires further configuration,
-see below. Beware: Fimfiction does not have a clearfix between paragraphs,
-which means that an overly long footnote block in a figure tag -- which is how
-you get sidenotes -- can interfere with footnote blocks for subsequent
-paragraphs and the paragraphs themselves.
-
-#### fimfic-footnote-scale ####
-
-Footnotes are traditionally printed in a smaller font size in most media. By
-default, this is equal to 0.75em. Should you wish to use a smaller or larger
-font size, set this value:
-
-    fimfic-footnote-scale: 1.1em
-
-Scaling footnotes is accomplished by the use of a pseudo-tag, `{{!fnscale!}}`
-and `{{!fnscale_end!}}` which you might need to use to construct your own
-`fimfic-footnote-block-tag`.
+Actually getting sidenotes you're happy with will require further
+configuration, see below. Beware: Fimfiction does not have a clearfix between
+paragraphs, which means that an overly long footnote block in a figure tag --
+which is how you get sidenotes -- can interfere with footnote blocks for
+subsequent paragraphs and the paragraphs themselves.
 
 #### fimfic-footnote-block-tag ####
 
-This option allows you to customize the start and end of the footnote blocks. The default, for inline footnotes, is
+This option allows you to customize the start and end of the footnote
+blocks. The default, for inline footnotes, is
 
-    fimfic-footnote-block-tag: ["[quote=Footnotes]{{!fnscale!}}", "{{!fnscale_end!}}[/quote]"]
+    fimfic-footnote-block-tag: ["[quote=Footnotes][size=0.75em]", "[/size][/quote]"]
 
-That is, footnote bodies are collected into a quote block and wrapped with a `[size=...]` tag of a given footnote scale.
+That is, footnote bodies are collected into a quote block and wrapped with a
+`[size=...]` tag with a scale smaller than the usual text.
 
 #### fimfic-footnote-marker-style ####
 
@@ -379,12 +378,14 @@ footnote text and the footnote marker. This configuration option allows you to
 control this:
 
     fimfic-footnote-marker-style:
-        - "[strong][sup]{{!fnscale!}}("
-        - "){{!fnscale_end!}}[/sup][/strong]"
+        - "[strong][sup][size=0.75em]("
+        - ")[/size][/sup][/strong]"
         - "[strong]("
         - ")[/strong]"
 
-The first two are what the footnote reference will be wrapped into, the second two are what the footnote number will be wrapped into when rendered in footnote bodies.
+The first two are what the footnote reference will be wrapped into, the second
+two are what the footnote number will be wrapped into when rendered in
+footnote bodies.
 
 #### fimfic-disable-unicode-trickery ###
 
@@ -399,8 +400,14 @@ For sidenotes, I use this:
     ---
     fimfic-endnotes: false
     fimfic-footnote-pre: true
-    fimfic-footnote-marker-style: ["[strong][sup]{{!fnscale!}}", "{{!fnscale_end!}}[/sup][/strong]", "[strong]", ".[/strong]\ "]
-    fimfic-footnote-block-tag: ["[figure=right]\n{{!fnscale!}}", "{{!fnscale_end!}}[/figure]"]
+    fimfic-footnote-marker-style:
+        - "[strong][sup][size=0.75em]"
+        - "[/size][/sup][/strong]"
+        - "[strong]"
+        - ".[/strong]\ "
+    fimfic-footnote-block-tag:
+        - "[figure=right]\n[size=0.75em]"
+        - "[/size][/figure]"
     ...
 
 For endnotes, this:
@@ -408,6 +415,12 @@ For endnotes, this:
     ---
     fimfic-endnotes: true
     fimfic-footnote-pre: false
-    fimfic-footnote-marker-style: ["[strong][sup]{{!fnscale!}}(", "){{!fnscale_end!}}[/sup][/strong]", "[strong](", ")[/strong] "]
-    fimfic-footnote-block-tag: ["[quote=Footnotes]{{!fnscale!}}", "{{!fnscale_end!}}[/quote]"]
+    fimfic-footnote-marker-style:
+        - "[strong][sup][size=0.75em](",
+        - ")[/size[/sup][/strong]",
+        - "[strong](",
+        - ")[/strong] "
+    fimfic-footnote-block-tag:
+        - "[quote=Footnotes][size=0.75em]"
+        - "[/size][/quote]"
     ...
