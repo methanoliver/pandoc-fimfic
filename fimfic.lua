@@ -24,26 +24,16 @@ local function isempty(s)
     return s == nil or s == ''
 end
 
-local function csplit(str,sep)
-    local ret={}
-    local n=1
-    for w in str:gmatch("([^"..sep.."]*)") do
-        ret[n]=ret[n] or w -- only set once (so the blank after a string is ignored)
-        if w=="" then n=n+1 end -- step forwards on a blank but not a string
-    end
-    return ret
-end
-
-function string:split_on_space()
+function string:split_on_char(ch)
     local result = {}
-    for token in self:gmatch('[^ ]+') do
+    for token in self:gmatch('[^' ..ch .. ']+') do
         table.insert(result, token)
     end
     return result
 end
 
 function string:tr_spaced(from, to)
-    from, to = from:split_on_space(), to:split_on_space()
+    from, to = from:split_on_char(" "), to:split_on_char(" ")
     assert(#from == #to, "#from = "..tostring(#from)..", #to = "..tostring(#to))
     local conversion_table = {}
     for i = 1, #from do
@@ -388,8 +378,8 @@ function insert_footnote_bodies(block)
         repeat
             local marker = block:match("{{!footnote_bodies!.-!}}")
             if marker then
-
-                local numbers = csplit(marker:gsub("{{!footnote_bodies!(.-)!}}","%1"),"!")
+                local numbers = marker:gsub("{{!footnote_bodies!(.-)!}}",
+                                            "%1" ):split_on_char("!")
                 local buff = {}
                 for index, number in ipairs(numbers) do
                     table.insert(buff, style_footnote_start(number, notes[tonumber(number)]))
