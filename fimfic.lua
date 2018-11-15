@@ -24,6 +24,17 @@ local function isempty(s)
     return s == nil or s == ''
 end
 
+function table.empty (self)
+    for _, _ in pairs(self) do
+        return false
+    end
+    return true
+end
+
+function string.starts(String,Start)
+    return string.sub(String,1,string.len(Start))==Start
+end
+
 function string:split_on_char(ch)
     local result = {}
     for token in self:gmatch('[^' ..ch .. ']+') do
@@ -80,7 +91,7 @@ end
 -- Table to store footnotes, so they can be included at the end.
 local notes = {}
 
---- Continuing with functions that rended corresponding pandoc elements.
+--- Continuing with functions that render corresponding pandoc elements.
 
 -- Blocksep is used to separate block elements.
 function Blocksep()
@@ -132,11 +143,6 @@ end
 
 function Strikeout(s)
     return '[s]' .. s .. '[/s]'
-end
-
--- we need that.
-function string.starts(String,Start)
-    return string.sub(String,1,string.len(Start))==Start
 end
 
 function Link(s, src, tit, attr)
@@ -315,13 +321,6 @@ function Plain(s)
     return s
 end
 
-function table.empty (self)
-    for _, _ in pairs(self) do
-        return false
-    end
-    return true
-end
-
 function insert_footnotes(block)
     if #notes > 0 then
         local buff = {}
@@ -345,7 +344,8 @@ function style_footnote_block(footnote_table)
     local quoteblock = table.concat(footnote_table, '\n')
     -- Prevent failures on urlencoded urls in footnotes.
     quoteblock = quoteblock:gsub("%%", "%%%%")
-    return "{{!footnote_block_begins!}}" .. quoteblock .. "{{!footnote_block_ends!}}"
+    return "{{!footnote_block_begins!}}" .. quoteblock ..
+        "{{!footnote_block_ends!}}"
 end
 
 function style_footnote_start(key, note)
@@ -382,7 +382,10 @@ function insert_footnote_bodies(block)
                                             "%1" ):split_on_char("!")
                 local buff = {}
                 for index, number in ipairs(numbers) do
-                    table.insert(buff, style_footnote_start(number, notes[tonumber(number)]))
+                    table.insert(buff,
+                                 style_footnote_start(
+                                     number,
+                                     notes[tonumber(number)]))
                 end
 
                 block = block:gsub(marker, style_footnote_block(buff))
@@ -475,7 +478,8 @@ function DefinitionList(items)
 end
 
 -- FimFiction does not have tables.
--- This whole thing is a remarkably poor attempt at doing them and needs to be rewritten.
+-- This whole thing is a remarkably poor attempt at doing them and needs to
+-- be rewritten.
 function Table(caption, aligns, widths, headers, rows)
     local buffer = {}
     local function add(s)
